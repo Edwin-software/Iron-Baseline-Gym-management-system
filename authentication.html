@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Iron Baseline Management system - Authentication Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e74c3c;
+            --accent: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #1a252f;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-box {
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-logo {
+            margin-bottom: 30px;
+        }
+
+        .auth-logo i {
+            font-size: 3.5rem;
+            color: var(--secondary);
+        }
+
+        .auth-logo h1 {
+            color: var(--primary);
+            margin-top: 10px;
+            font-size: 1.8rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            color: var(--accent);
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .auth-form {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: var(--accent);
+        }
+
+        .password-wrapper .form-control {
+            padding-right: 50px;
+        }
+
+        .select-role {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .role-option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .role-option:hover {
+            border-color: var(--accent);
+        }
+
+        .role-option.selected {
+            border-color: var(--accent);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .role-option i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--primary);
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .google-btn:hover {
+            background: #f8f9fa;
+            border-color: #ccc;
+        }
+
+        .google-btn i {
+            color: #DB4437;
+            font-size: 1.2rem;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #666;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+
+        .btn-danger {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        .forgot-password a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ddd;
+            overflow: hidden;
+        }
+
+        .strength-weak { width: 25%; background: #e74c3c; }
+        .strength-fair { width: 50%; background: #f39c12; }
+        .strength-good { width: 75%; background: #3498db; }
+        .strength-strong { width: 100%; background: #2ecc71; }
+
+        .strength-text {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            text-align: right;
+        }
+        
+        .error-border {
+            border-color: var(--secondary) !important;
+        }
+        
+        .error-message {
+            color: var(--secondary);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            z-index: 2002;
+            animation: slideIn 0.3s;
+            display: none;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--secondary); }
+        .notification.info { background: var(--accent); }
+        .notification.warning { background: var(--warning); }
+
+        @media (max-width: 768px) {
+            .auth-box {
+                padding: 30px 15px;
+            }
+            
+            .select-role {
+                grid-template-columns: 1fr;
+            }
+            
+            .auth-logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <i class="fas fa-dumbbell"></i>
+                <h1>Iron Baseline Gym management system</h1>
+                <p style="color: #666; margin-top: 5px;">Secure Access System</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <div id="loginForm" class="auth-form active">
+                <form id="loginFormElement" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="Enter your email" required>
+                        <div class="error-message" id="loginEmailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('loginPassword', 'loginPasswordToggle')">
+                                <i class="fas fa-eye" id="loginPasswordToggle"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" id="loginPasswordError"></div>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="loginButton" onclick="login()">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>Or continue with</span>
+                </div>
+
+                <button class="google-btn" onclick="signInWithGoogle()">
+                    <i class="fab fa-google"></i> Sign in with Google
+                </button>
+            </div>
+
+            <div id="signupForm" class="auth-form">
+                <form id="signupFormElement" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="signupName">Full Name *</label>
+                        <input type="text" id="signupName" class="form-control" placeholder="Enter your full name" required>
+                        <div class="error-message" id="signupNameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email Address *</label>
+                        <input type="email" id="signupEmail" class="form-control" placeholder="Enter your email" required>
+                        <div class="error-message" id="signupEmailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="signupPassword" class="form-control" placeholder="Create a password" required oninput="checkPasswordStrength()">
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('signupPassword', 'signupPasswordToggle')">
+                                <i class="fas fa-eye-slash" id="signupPasswordToggle"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrengthBar"></div>
+                        <div class="strength-text" id="passwordStrengthText"></div>
+                        <div class="error-message" id="signupPasswordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm your password" required oninput="validatePasswordMatch()">
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword', 'confirmPasswordToggle')">
+                                <i class="fas fa-eye" id="confirmPasswordToggle"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" id="confirmPasswordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Your Role *</label>
+                        <div class="select-role">
+                            <div class="role-option selected" onclick="selectRole('trainee')" data-role="trainee">
+                                <i class="fas fa-user"></i>
+                                <span>Trainee</span>
+                            </div>
+                            <div class="role-option" onclick="selectRole('trainer')" data-role="trainer">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Trainer</span>
+                            </div>
+                            <div class="role-option" onclick="selectRole('accounts')" data-role="accounts">
+                                <i class="fas fa-calculator"></i>
+                                <span>Accounts</span>
+                            </div>
+                        </div>
+                        <div class="error-message" id="roleError"></div>
+                    </div>
+                    <button type="button" class="btn btn-success" id="signupButton" onclick="signup()">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>Or sign up with</span>
+                </div>
+
+                <button class="google-btn" onclick="signUpWithGoogle()">
+                    <i class="fab fa-google"></i> Sign up with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // ==================== SUPABASE INITIALIZATION ====================
+        const { createClient } = supabase;
+        
+        // IMPORTANT: Replace these with your actual Supabase project credentials
+        const supabaseUrl = 'https://zmfyvtgmeiqsqfcmjfea.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptZnl2dGdtZWlxc3FmY21qZmVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0ODg3MTksImV4cCI6MjA4NTA2NDcxOX0.SnCabVusakn079oP1PuFaOnFqnAgkiWVyd2WFcxKAFA';
+        
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        // ==================== CONSTANTS ====================
+        const ROLES = {
+            OWNER: 'owner',
+            ADMIN: 'admin',
+            TRAINER: 'trainer',
+            TRAINEE: 'trainee',
+            ACCOUNTS: 'accounts',
+            MANAGER: 'manager'
+        };
+
+        const DASHBOARD_PATHS = {
+            [ROLES.OWNER]: 'admindashboard.html',
+            [ROLES.ADMIN]: 'admindashboard.html',
+            [ROLES.TRAINER]: 'trainerdashboard.html',
+            [ROLES.TRAINEE]: 'trainee.html',
+            [ROLES.ACCOUNTS]: 'accounts.html',
+            [ROLES.MANAGER]: 'managersdashboard.html'
+        };
+
+        // Rate limiting variables
+        let signupAttempts = 0;
+        let lastSignupAttempt = 0;
+        const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
+        const MAX_SIGNUP_ATTEMPTS = 3; // Maximum attempts per minute
+
+        let currentUser = null;
+        let selectedRole = 'trainee';
+
+        // ==================== NOTIFICATION FUNCTIONS ====================
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                const inputElement = document.getElementById(fieldId);
+                if (inputElement) {
+                    inputElement.classList.add('error-border');
+                }
+            }
+        }
+
+        function clearError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.style.display = 'none';
+                const inputElement = document.getElementById(fieldId);
+                if (inputElement) {
+                    inputElement.classList.remove('error-border');
+                }
+            }
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function togglePasswordVisibility(passwordFieldId, toggleIconId) {
+            const passwordField = document.getElementById(passwordFieldId);
+            const toggleIcon = document.getElementById(toggleIconId);
+            
+            if (!passwordField || !toggleIcon) return;
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('signupPassword').value;
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const strengthText = document.getElementById('passwordStrengthText');
+            
+            if (!password) {
+                if (strengthBar) strengthBar.innerHTML = '';
+                if (strengthText) strengthText.textContent = '';
+                return;
+            }
+            
+            let strength = 0;
+            
+            if (password.length >= 8) strength += 1;
+            else if (password.length >= 6) strength += 0.5;
+            
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[a-z]/.test(password)) strength += 1;
+            if (/\d/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+            
+            let strengthLevel = '';
+            let strengthClass = '';
+            
+            if (strength <= 1.5) {
+                strengthLevel = 'Weak';
+                strengthClass = 'strength-weak';
+            } else if (strength <= 3) {
+                strengthLevel = 'Fair';
+                strengthClass = 'strength-fair';
+            } else if (strength <= 4.5) {
+                strengthLevel = 'Good';
+                strengthClass = 'strength-good';
+            } else {
+                strengthLevel = 'Strong';
+                strengthClass = 'strength-strong';
+            }
+            
+            if (strengthBar) {
+                strengthBar.innerHTML = `<div class="${strengthClass}"></div>`;
+            }
+            
+            if (strengthText) {
+                strengthText.textContent = `Strength: ${strengthLevel}`;
+                strengthText.style.color = strengthLevel === 'Weak' ? '#e74c3c' : 
+                                           strengthLevel === 'Fair' ? '#f39c12' :
+                                           strengthLevel === 'Good' ? '#3498db' : '#2ecc71';
+            }
+        }
+
+        function validatePasswordMatch() {
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                showError('confirmPassword', 'Passwords do not match');
+                return false;
+            } else {
+                clearError('confirmPassword');
+                return true;
+            }
+        }
+
+        function switchAuthTab(tab) {
+            const errorIds = ['loginEmail', 'loginPassword', 'signupName', 'signupEmail', 'signupPassword', 'confirmPassword', 'role'];
+            errorIds.forEach(clearError);
+            
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const strengthText = document.getElementById('passwordStrengthText');
+            if (strengthBar) strengthBar.innerHTML = '';
+            if (strengthText) strengthText.textContent = '';
+            
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+                document.getElementById('signupForm').classList.add('active');
+                
+                document.getElementById('signupFormElement').reset();
+                
+                document.querySelectorAll('.role-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                selectRole('trainee');
+            }
+        }
+
+        function selectRole(role) {
+            selectedRole = role;
+            document.querySelectorAll('.role-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            const selectedOption = document.querySelector(`.role-option[data-role="${role}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+            }
+            clearError('role');
+        }
+
+        // ==================== RATE LIMITING FUNCTION ====================
+        function checkRateLimit() {
+            const now = Date.now();
+            
+            // Reset counter if outside the window
+            if (now - lastSignupAttempt > RATE_LIMIT_WINDOW) {
+                signupAttempts = 0;
+            }
+            
+            // Check if exceeded limit
+            if (signupAttempts >= MAX_SIGNUP_ATTEMPTS) {
+                const waitTime = Math.ceil((RATE_LIMIT_WINDOW - (now - lastSignupAttempt)) / 1000);
+                showNotification(`Too many signup attempts. Please wait ${waitTime} seconds.`, 'warning');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // ==================== REDIRECT FUNCTION ====================
+        function redirectToDashboard(userRole) {
+            const dashboardPath = DASHBOARD_PATHS[userRole] || 'trainee.html';
+            
+            // Store user data before redirect
+            if (currentUser) {
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            // Show success message and redirect
+            showNotification(`Welcome ${currentUser?.name || 'User'}! Redirecting to your dashboard...`, 'success');
+            
+            setTimeout(() => {
+                window.location.href = dashboardPath;
+            }, 1500);
+        }
+
+        // ==================== DIRECT USER CREATION (BYPASSES SUPABASE AUTH) ====================
+        async function createUserDirectly(userData) {
+            try {
+                // First check if user already exists
+                const { data: existingUser, error: checkError } = await supabaseClient
+                    .from('users')
+                    .select('email')
+                    .eq('email', userData.email.toLowerCase())
+                    .maybeSingle();
+
+                if (checkError) throw checkError;
+
+                if (existingUser) {
+                    showError('signupEmail', 'User with this email already exists');
+                    return false;
+                }
+
+                // Create user directly in the users table
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .insert([
+                        {
+                            email: userData.email.toLowerCase(),
+                            full_name: userData.name,
+                            password_hash: userData.password, // Note: In production, hash the password
+                            role: userData.role,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                // Set current user
+                currentUser = {
+                    id: data.id,
+                    email: data.email,
+                    name: data.full_name,
+                    role: data.role,
+                    avatar: data.full_name?.charAt(0).toUpperCase() || 'U',
+                    joinDate: data.created_at
+                };
+
+                return true;
+            } catch (error) {
+                console.error('Direct user creation error:', error);
+                showError('signupEmail', error.message || 'Failed to create account. Please try again.');
+                return false;
+            }
+        }
+
+        // ==================== SUPABASE AUTH FUNCTIONS ====================
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            clearError('loginEmail');
+            clearError('loginPassword');
+            
+            let isValid = true;
+            
+            if (!email) {
+                showError('loginEmail', 'Email is required');
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                showError('loginEmail', 'Please enter a valid email address');
+                isValid = false;
+            }
+            
+            if (!password) {
+                showError('loginPassword', 'Password is required');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+
+            try {
+                // Try Supabase Auth first
+                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (!authError && authData.user) {
+                    // Get user profile from users table
+                    const { data: userData, error: profileError } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('id', authData.user.id)
+                        .single();
+
+                    if (!profileError && userData) {
+                        currentUser = {
+                            id: authData.user.id,
+                            email: authData.user.email,
+                            name: userData.full_name,
+                            role: userData.role,
+                            avatar: userData.full_name?.charAt(0).toUpperCase() || 'U',
+                            joinDate: userData.created_at
+                        };
+
+                        // Store session
+                        if (authData.session) {
+                            localStorage.setItem('supabase.auth.token', JSON.stringify(authData.session));
+                        }
+                        
+                        // Redirect to appropriate dashboard
+                        redirectToDashboard(currentUser.role);
+                        return;
+                    }
+                }
+
+                // If Supabase Auth fails, try direct table login
+                const { data: userData, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('email', email.toLowerCase())
+                    .single();
+
+                if (userError || !userData) {
+                    showError('loginEmail', 'Invalid email or password');
+                    return;
+                }
+
+                // Simple password check (use proper hashing in production)
+                if (userData.password_hash === password) {
+                    currentUser = {
+                        id: userData.id,
+                        email: userData.email,
+                        name: userData.full_name,
+                        role: userData.role,
+                        avatar: userData.full_name?.charAt(0).toUpperCase() || 'U',
+                        joinDate: userData.created_at
+                    };
+
+                    // Redirect to appropriate dashboard
+                    redirectToDashboard(currentUser.role);
+                } else {
+                    showError('loginPassword', 'Incorrect password');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('loginEmail', 'Invalid email or password');
+            }
+        }
+
+        async function signup() {
+            // Check rate limit first
+            if (!checkRateLimit()) {
+                return;
+            }
+
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            const errorIds = ['signupName', 'signupEmail', 'signupPassword', 'confirmPassword', 'role'];
+            errorIds.forEach(clearError);
+            
+            let isValid = true;
+            
+            if (!name || name.length < 2) {
+                showError('signupName', 'Please enter a valid name (at least 2 characters)');
+                isValid = false;
+            }
+            
+            if (!email) {
+                showError('signupEmail', 'Email is required');
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                showError('signupEmail', 'Please enter a valid email address');
+                isValid = false;
+            }
+            
+            if (!password) {
+                showError('signupPassword', 'Password is required');
+                isValid = false;
+            } else if (password.length < 6) {
+                showError('signupPassword', 'Password must be at least 6 characters long');
+                isValid = false;
+            }
+            
+            if (!confirmPassword) {
+                showError('confirmPassword', 'Please confirm your password');
+                isValid = false;
+            } else if (password !== confirmPassword) {
+                showError('confirmPassword', 'Passwords do not match');
+                isValid = false;
+            }
+            
+            if (!selectedRole) {
+                showError('role', 'Please select a role');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+
+            // Update rate limiting
+            signupAttempts++;
+            lastSignupAttempt = Date.now();
+
+            try {
+                // Try Supabase Auth first (but handle rate limits gracefully)
+                try {
+                    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                full_name: name,
+                                role: selectedRole
+                            }
+                        }
+                    });
+
+                    if (!authError && authData.user) {
+                        // Create user profile in users table
+                        const { error: profileError } = await supabaseClient
+                            .from('users')
+                            .insert([
+                                {
+                                    id: authData.user.id,
+                                    email: email.toLowerCase(),
+                                    full_name: name,
+                                    password_hash: password, // Note: In production, hash the password
+                                    role: selectedRole,
+                                    created_at: new Date().toISOString()
+                                }
+                            ]);
+
+                        if (profileError) {
+                            console.error('Profile creation error:', profileError);
+                        }
+
+                        currentUser = {
+                            id: authData.user.id,
+                            email: email,
+                            name: name,
+                            role: selectedRole,
+                            avatar: name.charAt(0).toUpperCase(),
+                            joinDate: new Date().toISOString()
+                        };
+
+                        // Store session if available
+                        if (authData.session) {
+                            localStorage.setItem('supabase.auth.token', JSON.stringify(authData.session));
+                        }
+
+                        // Redirect to appropriate dashboard
+                        redirectToDashboard(selectedRole);
+                        return;
+                    }
+                } catch (authError) {
+                    // Check if it's a rate limit error
+                    if (authError.message && authError.message.includes('rate limit')) {
+                        console.log('Auth rate limit hit, falling back to direct creation');
+                        // Fall through to direct creation
+                    } else {
+                        throw authError; // Re-throw other errors
+                    }
+                }
+
+                // If we get here, either auth failed due to rate limit or other issue
+                // Try direct user creation as fallback
+                const success = await createUserDirectly({
+                    email: email,
+                    name: name,
+                    password: password,
+                    role: selectedRole
+                });
+
+                if (success) {
+                    redirectToDashboard(selectedRole);
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                
+                // Handle specific error messages
+                if (error.message && error.message.includes('rate limit')) {
+                    showNotification('Signup rate limit reached. Please try again in a few minutes.', 'warning');
+                } else {
+                    showError('signupEmail', error.message || 'Failed to create account. Please try again.');
+                }
+            }
+        }
+
+        async function checkExistingSession() {
+            try {
+                // Check for existing Supabase session
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (session) {
+                    const { data: userData, error } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (!error && userData) {
+                        currentUser = {
+                            id: session.user.id,
+                            email: session.user.email,
+                            name: userData.full_name,
+                            role: userData.role,
+                            avatar: userData.full_name?.charAt(0).toUpperCase() || 'U',
+                            joinDate: userData.created_at
+                        };
+                        
+                        // Redirect to dashboard
+                        redirectToDashboard(currentUser.role);
+                        return;
+                    }
+                }
+
+                // Check localStorage as fallback
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    try {
+                        currentUser = JSON.parse(savedUser);
+                        // Verify with database (optional)
+                        const { data: userData, error } = await supabaseClient
+                            .from('users')
+                            .select('*')
+                            .eq('email', currentUser.email)
+                            .single();
+                        
+                        if (!error && userData) {
+                            currentUser = {
+                                id: userData.id,
+                                email: userData.email,
+                                name: userData.full_name,
+                                role: userData.role,
+                                avatar: userData.full_name?.charAt(0).toUpperCase() || 'U',
+                                joinDate: userData.created_at
+                            };
+                            redirectToDashboard(currentUser.role);
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse saved user');
+                    }
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+            }
+        }
+
+        function signInWithGoogle() {
+            showNotification('Google sign-in will be implemented with Supabase', 'info');
+        }
+
+        function signUpWithGoogle() {
+            showNotification('Google sign-up will be implemented with Supabase', 'info');
+        }
+
+        function showForgotPassword() {
+            showNotification('Password reset feature coming soon!', 'info');
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            selectRole('trainee');
+            
+            const loginButton = document.getElementById('loginButton');
+            const signupButton = document.getElementById('signupButton');
+            
+            if (loginButton) {
+                loginButton.addEventListener('click', login);
+            }
+            
+            if (signupButton) {
+                signupButton.addEventListener('click', signup);
+            }
+            
+            document.getElementById('loginFormElement').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+            
+            document.getElementById('signupFormElement').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    signup();
+                }
+            });
+            
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                });
+            });
+            
+            // Check for existing session
+            checkExistingSession();
+        });
+    </script>
+</body>
+</html>
