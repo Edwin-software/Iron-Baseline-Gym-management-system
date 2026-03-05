@@ -1,0 +1,2633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Management Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF for PDF export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-bg: #f5f6fa;
+            --dark-text: #2c3e50;
+            --light-text: #ecf0f1;
+            --border-color: #dcdde1;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --admin-color: #8e44ad;
+            --manager-color: #16a085;
+            --trainer-color: #3498db;
+            --trainee-color: #2ecc71;
+            --accounts-color: #e67e22;
+            --privilege-color: #9b59b6;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .sidebar-header i {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--secondary-color);
+        }
+
+        .nav-item.active {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-left-color: var(--secondary-color);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .user-info {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            padding: 20px 30px;
+            background-color: white;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Dashboard Sections */
+        .dashboard-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .dashboard-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-header h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        /* Cards and Tables */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-card i {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header h3 {
+            color: var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-pending {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+        }
+
+        .status-inactive {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--accent-color);
+        }
+
+        .status-expired {
+            background-color: rgba(149, 165, 166, 0.1);
+            color: #95a5a6;
+        }
+
+        .role-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .role-admin {
+            background-color: rgba(142, 68, 173, 0.1);
+            color: var(--admin-color);
+        }
+
+        .role-manager {
+            background-color: rgba(22, 160, 133, 0.1);
+            color: var(--manager-color);
+        }
+
+        .role-trainer {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--trainer-color);
+        }
+
+        .role-trainee {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--trainee-color);
+        }
+
+        .role-accounts {
+            background-color: rgba(230, 126, 34, 0.1);
+            color: var(--accounts-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .delete-btn {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--accent-color);
+        }
+
+        .verify-btn {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+
+        /* Forms */
+        .form-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .form-container {
+            background-color: white;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .form-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-header h3 {
+            color: var(--primary-color);
+        }
+
+        .close-form {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .form-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-img {
+            height: 180px;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #bdc3c7;
+            font-size: 3rem;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .product-price {
+            color: var(--secondary-color);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Privileges Section */
+        .privilege-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .privilege-item:last-child {
+            border-bottom: none;
+        }
+
+        .privilege-name {
+            flex: 1;
+        }
+
+        .privilege-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .privilege-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .privilege-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .privilege-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .privilege-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .privilege-slider {
+            background-color: var(--success-color);
+        }
+
+        input:checked + .privilege-slider:before {
+            transform: translateX(30px);
+        }
+
+        .role-selector {
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar-header h2, .nav-item span, .user-info .user-details {
+                display: none;
+            }
+            
+            .sidebar-header {
+                justify-content: center;
+                padding: 25px 10px;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+            
+            .user-info {
+                justify-content: center;
+                padding: 20px 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .user-actions {
+                align-self: flex-end;
+            }
+            
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-dumbbell"></i>
+            <h2>Gym Admin</h2>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-section="gym-accounts">
+                <i class="fas fa-user-shield"></i>
+                <span>User Accounts</span>
+            </div>
+            <div class="nav-item" data-section="current-members">
+                <i class="fas fa-users"></i>
+                <span>Current Members</span>
+            </div>
+            <div class="nav-item" data-section="valid-memberships">
+                <i class="fas fa-id-card"></i>
+                <span>Valid Memberships</span>
+            </div>
+            <div class="nav-item" data-section="training-sessions">
+                <i class="fas fa-calendar-check"></i>
+                <span>Training Sessions</span>
+            </div>
+            <div class="nav-item" data-section="session-verification">
+                <i class="fas fa-check-circle"></i>
+                <span>Session Verification</span>
+            </div>
+            <div class="nav-item" data-section="products">
+                <i class="fas fa-store"></i>
+                <span>Products</span>
+            </div>
+            <div class="nav-item" data-section="user-privileges">
+                <i class="fas fa-user-cog"></i>
+                <span>User Privileges</span>
+            </div>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">AD</div>
+            <div class="user-details">
+                <h4>Admin User</h4>
+                <p>Administrator</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h1>Admin Dashboard</h1>
+            <div class="user-actions">
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="dashboard-section active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                    <div id="last-updated">Last updated: Today, 10:30 AM</div>
+                </div>
+                
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div>
+                            <h3 id="total-members">1,247</h3>
+                            <p>Total Members</p>
+                        </div>
+                        <i class="fas fa-users"></i>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div>
+                            <h3 id="active-sessions">42</h3>
+                            <p>Active Sessions</p>
+                        </div>
+                        <i class="fas fa-running"></i>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div>
+                            <h3 id="pending-verifications">18</h3>
+                            <p>Pending Verifications</p>
+                        </div>
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div>
+                            <h3 id="products-count">56</h3>
+                            <p>Products in Store</p>
+                        </div>
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Activities</h3>
+                        <button class="btn btn-primary" id="clear-activities">
+                            <i class="fas fa-trash"></i> Clear Activities
+                        </button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Activity</th>
+                                <th>User</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-activities-table">
+                            <!-- Recent activities will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- User Accounts Section -->
+            <div id="gym-accounts" class="dashboard-section">
+                <div class="section-header">
+                    <h2>User Accounts Management</h2>
+                    <button class="btn btn-primary" id="add-user-btn">
+                        <i class="fas fa-plus"></i> Add New User
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>User Accounts</h3>
+                        <input type="text" class="form-control" id="search-users" placeholder="Search users..." style="width: 250px;">
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-accounts-table">
+                            <!-- User accounts will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Current Members Section -->
+            <div id="current-members" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Current Members (Active Sessions)</h2>
+                    <button class="btn btn-primary" id="export-pdf-btn">
+                        <i class="fas fa-download"></i> Export as PDF
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Members Currently Logged In</h3>
+                        <div>
+                            <span style="margin-right: 15px;">Filter by:</span>
+                            <select class="form-control" id="area-filter" style="display: inline-block; width: auto;">
+                                <option>All Areas</option>
+                                <option>Weight Room</option>
+                                <option>Cardio Zone</option>
+                                <option>Group Classes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table id="current-members-data">
+                        <thead>
+                            <tr>
+                                <th>Member Name</th>
+                                <th>Check-in Time</th>
+                                <th>Current Activity</th>
+                                <th>Duration</th>
+                                <th>Trainer</th>
+                            </tr>
+                        </thead>
+                        <tbody id="current-members-table">
+                            <!-- Current members will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Valid Memberships Section -->
+            <div id="valid-memberships" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Membership Management</h2>
+                    <button class="btn btn-primary" id="add-membership-btn">
+                        <i class="fas fa-plus"></i> Add Membership
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Membership Plans</h3>
+                        <div>
+                            <span style="margin-right: 10px;">Show:</span>
+                            <select class="form-control" id="membership-filter" style="display: inline-block; width: auto;">
+                                <option value="all">All Plans</option>
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Member Name</th>
+                                <th>Plan Type</th>
+                                <th>Start Date</th>
+                                <th>Expiry Date</th>
+                                <th>Auto Renew</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="valid-memberships-table">
+                            <!-- Valid memberships will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Training Sessions Section -->
+            <div id="training-sessions" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Trainers and Trainees Sessions</h2>
+                    <button class="btn btn-primary" id="schedule-session-btn">
+                        <i class="fas fa-calendar-plus"></i> Schedule Session
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Upcoming Sessions</h3>
+                        <div>
+                            <span style="margin-right: 10px;">View:</span>
+                            <select class="form-control" id="session-view-filter" style="display: inline-block; width: auto;">
+                                <option>All Sessions</option>
+                                <option>Today</option>
+                                <option>This Week</option>
+                                <option>Trainer Sessions</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Trainer</th>
+                                <th>Trainee</th>
+                                <th>Date & Time</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="training-sessions-table">
+                            <!-- Training sessions will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Session Verification Section -->
+            <div id="session-verification" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Session Verification</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-success" id="verify-all-btn">
+                            <i class="fas fa-check-double"></i> Verify All
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Sessions Pending Verification</h3>
+                        <div class="status-badge status-pending">18 Pending</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Trainer/Trainee</th>
+                                <th>Session Type</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="session-verification-table">
+                            <!-- Session verification data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Products Section -->
+            <div id="products" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Supplement & Gear Store</h2>
+                    <button class="btn btn-primary" id="add-product-btn">
+                        <i class="fas fa-plus"></i> Add Product
+                    </button>
+                </div>
+                
+                <div class="product-grid" id="products-grid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- User Privileges Section -->
+            <div id="user-privileges" class="dashboard-section">
+                <div class="section-header">
+                    <h2>User Privileges Management</h2>
+                    <button class="btn btn-primary" id="save-privileges-btn">
+                        <i class="fas fa-save"></i> Save Privileges
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>User Roles and Permissions</h3>
+                        <div>
+                            <span style="margin-right: 10px;">Filter by Role:</span>
+                            <select class="form-control" id="role-filter" style="display: inline-block; width: auto;">
+                                <option value="all">All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="trainer">Trainer</option>
+                                <option value="trainee">Trainee</option>
+                                <option value="accounts">Accounts</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <h3>System Privileges</h3>
+                        </div>
+                        <div id="privileges-list">
+                            <!-- Privileges will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <h3>User Role Assignment</h3>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Current Role</th>
+                                    <th>New Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="role-assignment-table">
+                                <!-- Role assignment will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Forms Overlay -->
+    <div class="form-overlay" id="form-overlay">
+        <!-- Add User Form -->
+        <div class="form-container" id="add-user-form">
+            <div class="form-header">
+                <h3 id="user-form-title">Add New User Account</h3>
+                <button class="close-form" id="close-user-form">&times;</button>
+            </div>
+            <div class="form-body">
+                <div class="form-group">
+                    <label for="user-name">Full Name</label>
+                    <input type="text" id="user-name" class="form-control" placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="user-email">Email Address</label>
+                    <input type="email" id="user-email" class="form-control" placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="user-phone">Phone Number</label>
+                    <input type="tel" id="user-phone" class="form-control" placeholder="Enter phone number">
+                </div>
+                <div class="form-group">
+                    <label for="user-role">User Role</label>
+                    <select id="user-role" class="form-control">
+                        <option value="admin">Administrator</option>
+                        <option value="manager">Manager</option>
+                        <option value="trainer">Trainer</option>
+                        <option value="trainee">Trainee</option>
+                        <option value="accounts">Accounts</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="user-status">Status</label>
+                    <select id="user-status" class="form-control">
+                        <option value="active">Active</option>
+                        <option value="pending">Pending Verification</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button class="btn" id="cancel-user-form">Cancel</button>
+                <button class="btn btn-primary" id="save-user-form">Save User Account</button>
+            </div>
+        </div>
+        
+        <!-- Add/Edit Product Form -->
+        <div class="form-container" id="add-product-form">
+            <div class="form-header">
+                <h3 id="product-form-title">Add New Product</h3>
+                <button class="close-form" id="close-product-form">&times;</button>
+            </div>
+            <div class="form-body">
+                <input type="hidden" id="product-id" value="">
+                <div class="form-group">
+                    <label for="product-name">Product Name</label>
+                    <input type="text" id="product-name" class="form-control" placeholder="Enter product name">
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Category</label>
+                    <select id="product-category" class="form-control">
+                        <option value="supplements">Supplements</option>
+                        <option value="gear">Gear</option>
+                        <option value="apparel">Apparel</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Price (KSh)</label>
+                    <input type="number" id="product-price" class="form-control" placeholder="Enter price in KSh" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="product-stock">Stock Quantity</label>
+                    <input type="number" id="product-stock" class="form-control" placeholder="Enter quantity" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Description</label>
+                    <textarea id="product-description" class="form-control" rows="3" placeholder="Enter product description"></textarea>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button class="btn" id="cancel-product-form">Cancel</button>
+                <button class="btn btn-primary" id="save-product-form">Save Product</button>
+            </div>
+        </div>
+        
+        <!-- Add/Edit Membership Form -->
+        <div class="form-container" id="add-membership-form">
+            <div class="form-header">
+                <h3 id="membership-form-title">Edit Membership Plan</h3>
+                <button class="close-form" id="close-membership-form">&times;</button>
+            </div>
+            <div class="form-body">
+                <input type="hidden" id="membership-id" value="">
+                <div class="form-group">
+                    <label for="membership-member">Member Name</label>
+                    <select id="membership-member" class="form-control">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="membership-plan">Plan Type</label>
+                    <select id="membership-plan" class="form-control">
+                        <option value="basic">Basic</option>
+                        <option value="premium">Premium</option>
+                        <option value="family">Family</option>
+                        <option value="student">Student</option>
+                        <option value="corporate">Corporate</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="membership-start">Start Date</label>
+                    <input type="date" id="membership-start" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="membership-expiry">Expiry Date</label>
+                    <input type="date" id="membership-expiry" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="membership-auto-renew">Auto Renew</label>
+                    <select id="membership-auto-renew" class="form-control">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="membership-status">Status</label>
+                    <select id="membership-status" class="form-control">
+                        <option value="active">Active</option>
+                        <option value="expired">Expired</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button class="btn" id="cancel-membership-form">Cancel</button>
+                <button class="btn btn-primary" id="save-membership-form">Save Membership</button>
+            </div>
+        </div>
+        
+        <!-- Schedule Session Form -->
+        <div class="form-container" id="schedule-session-form">
+            <div class="form-header">
+                <h3 id="session-form-title">Schedule Training Session</h3>
+                <button class="close-form" id="close-session-form">&times;</button>
+            </div>
+            <div class="form-body">
+                <input type="hidden" id="session-id" value="">
+                <div class="form-group">
+                    <label for="session-trainer">Trainer</label>
+                    <select id="session-trainer" class="form-control">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="session-trainee">Trainee</label>
+                    <select id="session-trainee" class="form-control">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="session-type">Session Type</label>
+                    <select id="session-type" class="form-control">
+                        <option value="personal">Personal Training</option>
+                        <option value="group">Group Class</option>
+                        <option value="yoga">Yoga</option>
+                        <option value="hiit">HIIT</option>
+                        <option value="strength">Strength Training</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="session-date">Date</label>
+                    <input type="date" id="session-date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="session-time">Time</label>
+                    <input type="time" id="session-time" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="session-duration">Duration (minutes)</label>
+                    <input type="number" id="session-duration" class="form-control" placeholder="Enter duration in minutes" min="15" step="15" value="60">
+                </div>
+                <div class="form-group">
+                    <label for="session-status">Status</label>
+                    <select id="session-status" class="form-control">
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button class="btn" id="cancel-session-form">Cancel</button>
+                <button class="btn btn-primary" id="save-session-form">Schedule Session</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data for the dashboard
+        const userAccounts = [
+            { id: 1, name: "Admin User", email: "admin@gym.com", phone: "555-0001", role: "admin", status: "active" },
+            { id: 2, name: "John Smith", email: "john.smith@gym.com", phone: "555-1234", role: "manager", status: "active" },
+            { id: 3, name: "Maria Garcia", email: "maria.garcia@gym.com", phone: "555-5678", role: "trainer", status: "pending" },
+            { id: 4, name: "Robert Johnson", email: "robert.johnson@gym.com", phone: "555-9012", role: "trainee", status: "active" },
+            { id: 5, name: "Sarah Williams", email: "sarah.williams@gym.com", phone: "555-3456", role: "accounts", status: "active" },
+            { id: 6, name: "Michael Brown", email: "michael.brown@gym.com", phone: "555-7890", role: "trainee", status: "inactive" }
+        ];
+
+        const currentMembers = [
+            { id: 1, name: "James Wilson", checkin: "09:15 AM", activity: "Weight Training", duration: "1h 15m", trainer: "Alex Turner" },
+            { id: 2, name: "Emily Davis", checkin: "09:30 AM", activity: "Cardio", duration: "45m", trainer: "N/A" },
+            { id: 3, name: "David Miller", checkin: "10:00 AM", activity: "Group Class", duration: "1h 00m", trainer: "Jessica Lee" },
+            { id: 4, name: "Sophia Martinez", checkin: "10:15 AM", activity: "Personal Training", duration: "1h 30m", trainer: "Alex Turner" },
+            { id: 5, name: "Daniel Thompson", checkin: "08:45 AM", activity: "Weight Training", duration: "1h 45m", trainer: "N/A" }
+        ];
+
+        const validMemberships = [
+            { id: 1, memberId: 4, name: "Robert Johnson", plan: "Premium", start: "2023-01-15", expiry: "2024-01-15", autoRenew: true, status: "active" },
+            { id: 2, memberId: 6, name: "Michael Brown", plan: "Basic", start: "2023-03-10", expiry: "2024-03-10", autoRenew: false, status: "expired" },
+            { id: 3, memberId: 8, name: "David Miller", plan: "Family", start: "2023-05-22", expiry: "2024-05-22", autoRenew: true, status: "active" },
+            { id: 4, memberId: 9, name: "Sophia Martinez", plan: "Premium", start: "2023-07-18", expiry: "2024-07-18", autoRenew: true, status: "active" },
+            { id: 5, memberId: 10, name: "Daniel Thompson", plan: "Basic", start: "2023-09-05", expiry: "2024-09-05", autoRenew: false, status: "inactive" },
+            { id: 6, memberId: 11, name: "James Wilson", plan: "Student", start: "2023-11-01", expiry: "2024-11-01", autoRenew: true, status: "pending" }
+        ];
+
+        const trainingSessions = [
+            { id: 101, trainer: "Alex Turner", trainee: "Sophia Martinez", datetime: "2023-11-15 14:00", type: "Personal Training", status: "confirmed" },
+            { id: 102, trainer: "Jessica Lee", trainee: "Group Class", datetime: "2023-11-15 16:00", type: "Yoga", status: "confirmed" },
+            { id: 103, trainer: "Mark Robinson", trainee: "James Wilson", datetime: "2023-11-16 10:00", type: "Strength Training", status: "pending" },
+            { id: 104, trainer: "Alex Turner", trainee: "Emily Davis", datetime: "2023-11-16 11:30", type: "Personal Training", status: "confirmed" },
+            { id: 105, trainer: "Jessica Lee", trainee: "Group Class", datetime: "2023-11-17 09:00", type: "HIIT", status: "pending" }
+        ];
+
+        const sessionVerifications = [
+            { id: 201, user: "Alex Turner", type: "Personal Training", date: "2023-11-14", duration: "1.5h", status: "pending" },
+            { id: 202, user: "Maria Garcia", type: "Weight Training", date: "2023-11-14", duration: "1h", status: "pending" },
+            { id: 203, user: "Robert Johnson", type: "Cardio Session", date: "2023-11-13", duration: "45m", status: "pending" },
+            { id: 204, user: "Jessica Lee", type: "Group Class", date: "2023-11-13", duration: "1h", status: "pending" }
+        ];
+
+        const products = [
+            { id: 1, name: "Whey Protein Powder", category: "supplements", price: 4500, stock: 24, description: "High-quality protein for muscle recovery" },
+            { id: 2, name: "Fitness Tracker", category: "gear", price: 12000, stock: 15, description: "Track your workouts and health metrics" },
+            { id: 3, name: "Weightlifting Gloves", category: "gear", price: 1800, stock: 32, description: "Protect your hands during heavy lifts" },
+            { id: 4, name: "BCAA Supplements", category: "supplements", price: 2500, stock: 18, description: "Amino acids for endurance and recovery" },
+            { id: 5, name: "Yoga Mat", category: "gear", price: 3500, stock: 22, description: "Non-slip mat for yoga and floor exercises" },
+            { id: 6, name: "Pre-Workout Energizer", category: "supplements", price: 3200, stock: 12, description: "Boost your energy for intense workouts" }
+        ];
+
+        // System privileges
+        const systemPrivileges = [
+            { id: 1, name: "Manage Users", admin: true, manager: true, trainer: false, trainee: false, accounts: false },
+            { id: 2, name: "Manage Memberships", admin: true, manager: true, trainer: false, trainee: false, accounts: true },
+            { id: 3, name: "Schedule Sessions", admin: true, manager: true, trainer: true, trainee: false, accounts: false },
+            { id: 4, name: "Verify Sessions", admin: true, manager: true, trainer: true, trainee: false, accounts: false },
+            { id: 5, name: "Manage Products", admin: true, manager: true, trainer: false, trainee: false, accounts: true },
+            { id: 6, name: "View Reports", admin: true, manager: true, trainer: false, trainee: false, accounts: true },
+            { id: 7, name: "Financial Access", admin: true, manager: false, trainer: false, trainee: false, accounts: true },
+            { id: 8, name: "System Configuration", admin: true, manager: false, trainer: false, trainee: false, accounts: false }
+        ];
+
+        // Recent activities log
+        let recentActivities = [
+            { time: "10:15 AM", activity: "New user account added", user: "John Smith", details: "Role: Manager" },
+            { time: "09:45 AM", activity: "Session booked", user: "Maria Garcia", details: "Personal Training" },
+            { time: "09:30 AM", activity: "Membership renewed", user: "Robert Johnson", details: "Premium Plan" },
+            { time: "Yesterday", activity: "Product added to store", user: "Admin", details: "Protein Powder" },
+            { time: "Yesterday", activity: "Session verified", user: "Trainer Alex", details: "Group Class" }
+        ];
+
+        // DOM Elements
+        const navItems = document.querySelectorAll('.nav-item');
+        const dashboardSections = document.querySelectorAll('.dashboard-section');
+        const formOverlay = document.getElementById('form-overlay');
+        const addUserForm = document.getElementById('add-user-form');
+        const addProductForm = document.getElementById('add-product-form');
+        const addMembershipForm = document.getElementById('add-membership-form');
+        const scheduleSessionForm = document.getElementById('schedule-session-form');
+        const closeButtons = document.querySelectorAll('.close-form, .btn[id$="form"]');
+        const userAccountsTable = document.getElementById('user-accounts-table');
+        const currentMembersTable = document.getElementById('current-members-table');
+        const validMembershipsTable = document.getElementById('valid-memberships-table');
+        const trainingSessionsTable = document.getElementById('training-sessions-table');
+        const sessionVerificationTable = document.getElementById('session-verification-table');
+        const productsGrid = document.getElementById('products-grid');
+        const searchUsersInput = document.getElementById('search-users');
+        const membershipFilter = document.getElementById('membership-filter');
+        const recentActivitiesTable = document.getElementById('recent-activities-table');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const scheduleSessionBtn = document.getElementById('schedule-session-btn');
+        const privilegesList = document.getElementById('privileges-list');
+        const roleAssignmentTable = document.getElementById('role-assignment-table');
+        const roleFilter = document.getElementById('role-filter');
+        const savePrivilegesBtn = document.getElementById('save-privileges-btn');
+        const clearActivitiesBtn = document.getElementById('clear-activities');
+
+        // State variables
+        let editingUserId = null;
+        let editingProductId = null;
+        let editingMembershipId = null;
+        let editingSessionId = null;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            populateUserAccountsTable();
+            populateCurrentMembersTable();
+            populateValidMembershipsTable();
+            populateTrainingSessionsTable();
+            populateSessionVerificationTable();
+            populateProductsGrid();
+            populateRecentActivities();
+            populatePrivilegesList();
+            populateRoleAssignmentTable();
+            
+            setupEventListeners();
+            
+            updateStats();
+            
+            updateLastUpdatedTime();
+        });
+
+        function setupEventListeners() {
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const sectionId = this.getAttribute('data-section');
+                    navigateToSection(sectionId);
+                });
+            });
+
+            document.getElementById('add-user-btn').addEventListener('click', () => openForm('add-user-form', 'add'));
+            document.getElementById('add-product-btn').addEventListener('click', () => openForm('add-product-form', 'add'));
+            document.getElementById('add-membership-btn').addEventListener('click', () => openForm('add-membership-form', 'add'));
+            document.getElementById('schedule-session-btn').addEventListener('click', () => openForm('schedule-session-form', 'add'));
+            
+            closeButtons.forEach(button => {
+                if (button.id.includes('cancel') || button.id.includes('close')) {
+                    button.addEventListener('click', closeForm);
+                }
+            });
+            
+            document.getElementById('save-user-form').addEventListener('click', saveUserAccount);
+            document.getElementById('save-product-form').addEventListener('click', saveProduct);
+            document.getElementById('save-membership-form').addEventListener('click', saveMembership);
+            document.getElementById('save-session-form').addEventListener('click', saveTrainingSession);
+            
+            document.getElementById('verify-all-btn').addEventListener('click', verifyAllSessions);
+            
+            searchUsersInput.addEventListener('input', searchUsers);
+            
+            membershipFilter.addEventListener('change', filterMemberships);
+            
+            roleFilter.addEventListener('change', filterRoleAssignment);
+            
+            exportPdfBtn.addEventListener('click', exportCurrentMembersToPDF);
+            
+            savePrivilegesBtn.addEventListener('click', savePrivileges);
+            
+            clearActivitiesBtn.addEventListener('click', clearActivities);
+            
+            formOverlay.addEventListener('click', function(e) {
+                if (e.target === formOverlay) {
+                    closeForm();
+                }
+            });
+            
+            document.getElementById('area-filter').addEventListener('change', filterCurrentMembers);
+            
+            document.getElementById('session-view-filter').addEventListener('change', filterTrainingSessions);
+        }
+
+        function navigateToSection(sectionId) {
+            navItems.forEach(item => {
+                if (item.getAttribute('data-section') === sectionId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            dashboardSections.forEach(section => {
+                if (section.id === sectionId) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+        }
+
+        function openForm(formId, mode = 'add', id = null) {
+            document.querySelectorAll('.form-container').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            const form = document.getElementById(formId);
+            form.style.display = 'block';
+            
+            if (formId === 'add-user-form') {
+                if (mode === 'edit' && id) {
+                    editingUserId = id;
+                    document.getElementById('user-form-title').textContent = 'Edit User Account';
+                    document.getElementById('save-user-form').textContent = 'Update User Account';
+                    populateUserForm(id);
+                } else {
+                    editingUserId = null;
+                    document.getElementById('user-form-title').textContent = 'Add New User Account';
+                    document.getElementById('save-user-form').textContent = 'Save User Account';
+                    clearUserForm();
+                }
+            } else if (formId === 'add-product-form') {
+                if (mode === 'edit' && id) {
+                    editingProductId = id;
+                    document.getElementById('product-form-title').textContent = 'Edit Product';
+                    document.getElementById('save-product-form').textContent = 'Update Product';
+                    populateProductForm(id);
+                } else {
+                    editingProductId = null;
+                    document.getElementById('product-form-title').textContent = 'Add New Product';
+                    document.getElementById('save-product-form').textContent = 'Save Product';
+                    clearProductForm();
+                }
+            } else if (formId === 'add-membership-form') {
+                if (mode === 'edit' && id) {
+                    editingMembershipId = id;
+                    document.getElementById('membership-form-title').textContent = 'Edit Membership Plan';
+                    document.getElementById('save-membership-form').textContent = 'Update Membership';
+                    populateMembershipForm(id);
+                } else {
+                    editingMembershipId = null;
+                    document.getElementById('membership-form-title').textContent = 'Add New Membership';
+                    document.getElementById('save-membership-form').textContent = 'Save Membership';
+                    clearMembershipForm();
+                }
+                populateMemberDropdown();
+            } else if (formId === 'schedule-session-form') {
+                if (mode === 'edit' && id) {
+                    editingSessionId = id;
+                    document.getElementById('session-form-title').textContent = 'Edit Training Session';
+                    document.getElementById('save-session-form').textContent = 'Update Session';
+                    populateSessionForm(id);
+                } else {
+                    editingSessionId = null;
+                    document.getElementById('session-form-title').textContent = 'Schedule Training Session';
+                    document.getElementById('save-session-form').textContent = 'Schedule Session';
+                    clearSessionForm();
+                }
+                populateTrainerTraineeDropdowns();
+            }
+            
+            formOverlay.style.display = 'flex';
+        }
+
+        function closeForm() {
+            formOverlay.style.display = 'none';
+            editingUserId = null;
+            editingProductId = null;
+            editingMembershipId = null;
+            editingSessionId = null;
+        }
+
+        function clearUserForm() {
+            document.getElementById('user-name').value = '';
+            document.getElementById('user-email').value = '';
+            document.getElementById('user-phone').value = '';
+            document.getElementById('user-role').value = 'trainee';
+            document.getElementById('user-status').value = 'active';
+        }
+
+        function clearProductForm() {
+            document.getElementById('product-id').value = '';
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-category').value = 'supplements';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-stock').value = '';
+            document.getElementById('product-description').value = '';
+        }
+
+        function clearMembershipForm() {
+            document.getElementById('membership-id').value = '';
+            document.getElementById('membership-member').value = '';
+            document.getElementById('membership-plan').value = 'basic';
+            document.getElementById('membership-start').value = '';
+            document.getElementById('membership-expiry').value = '';
+            document.getElementById('membership-auto-renew').value = 'true';
+            document.getElementById('membership-status').value = 'active';
+        }
+
+        function clearSessionForm() {
+            document.getElementById('session-id').value = '';
+            document.getElementById('session-trainer').value = '';
+            document.getElementById('session-trainee').value = '';
+            document.getElementById('session-type').value = 'personal';
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('session-date').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('session-time').value = '09:00';
+            document.getElementById('session-duration').value = '60';
+            document.getElementById('session-status').value = 'confirmed';
+        }
+
+        function populateUserAccountsTable() {
+            userAccountsTable.innerHTML = '';
+            userAccounts.forEach(user => {
+                const statusClass = `status-${user.status}`;
+                const statusText = user.status.charAt(0).toUpperCase() + user.status.slice(1);
+                const roleClass = `role-${user.role}`;
+                const roleText = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}<br><small>${user.phone}</small></td>
+                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" data-id="${user.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn verify-btn" data-id="${user.id}">
+                                <i class="fas fa-check"></i> Verify
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${user.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                userAccountsTable.appendChild(row);
+            });
+            
+            addUserTableEventListeners();
+        }
+
+        function addUserTableEventListeners() {
+            document.querySelectorAll('#user-accounts-table .edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    openForm('add-user-form', 'edit', userId);
+                });
+            });
+            
+            document.querySelectorAll('#user-accounts-table .verify-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    verifyUserAccount(userId);
+                });
+            });
+            
+            document.querySelectorAll('#user-accounts-table .delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    deleteUserAccount(userId);
+                });
+            });
+        }
+
+        function populateCurrentMembersTable() {
+            currentMembersTable.innerHTML = '';
+            currentMembers.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.name}</td>
+                    <td>${member.checkin}</td>
+                    <td>${member.activity}</td>
+                    <td>${member.duration}</td>
+                    <td>${member.trainer}</td>
+                `;
+                currentMembersTable.appendChild(row);
+            });
+        }
+
+        function filterCurrentMembers() {
+            const filterValue = document.getElementById('area-filter').value;
+            const rows = document.querySelectorAll('#current-members-table tr');
+            
+            rows.forEach(row => {
+                const activityCell = row.querySelector('td:nth-child(3)');
+                if (activityCell) {
+                    const activity = activityCell.textContent;
+                    
+                    if (filterValue === 'All Areas' || 
+                        (filterValue === 'Weight Room' && activity.includes('Weight')) ||
+                        (filterValue === 'Cardio Zone' && activity.includes('Cardio')) ||
+                        (filterValue === 'Group Classes' && activity.includes('Group'))) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function populateValidMembershipsTable() {
+            validMembershipsTable.innerHTML = '';
+            const filterValue = membershipFilter.value;
+            
+            const filteredMemberships = validMemberships.filter(membership => {
+                if (filterValue === 'all') return true;
+                return membership.status === filterValue;
+            });
+            
+            filteredMemberships.forEach(membership => {
+                const autoRenewText = membership.autoRenew ? 'Yes' : 'No';
+                const statusClass = `status-${membership.status}`;
+                const statusText = membership.status.charAt(0).toUpperCase() + membership.status.slice(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${membership.name}</td>
+                    <td>${membership.plan}</td>
+                    <td>${membership.start}</td>
+                    <td>${membership.expiry}</td>
+                    <td>${autoRenewText}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn edit-membership-btn" data-id="${membership.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn delete-btn delete-membership-btn" data-id="${membership.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                validMembershipsTable.appendChild(row);
+            });
+            
+            addMembershipTableEventListeners();
+        }
+
+        function addMembershipTableEventListeners() {
+            document.querySelectorAll('.edit-membership-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const membershipId = this.getAttribute('data-id');
+                    openForm('add-membership-form', 'edit', membershipId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-membership-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const membershipId = this.getAttribute('data-id');
+                    deleteMembership(membershipId);
+                });
+            });
+        }
+
+        function filterMemberships() {
+            populateValidMembershipsTable();
+        }
+
+        function populateTrainingSessionsTable() {
+            trainingSessionsTable.innerHTML = '';
+            trainingSessions.forEach(session => {
+                const statusClass = session.status === 'confirmed' ? 'status-active' : 
+                                  session.status === 'pending' ? 'status-pending' : 'status-inactive';
+                const statusText = session.status.charAt(0).toUpperCase() + session.status.slice(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>#${session.id}</td>
+                    <td>${session.trainer}</td>
+                    <td>${session.trainee}</td>
+                    <td>${session.datetime}</td>
+                    <td>${session.type}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn edit-session-btn" data-id="${session.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn delete-btn delete-session-btn" data-id="${session.id}">
+                                <i class="fas fa-trash"></i> Cancel
+                            </button>
+                        </div>
+                    </td>
+                `;
+                trainingSessionsTable.appendChild(row);
+            });
+            
+            document.querySelectorAll('.edit-session-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sessionId = this.getAttribute('data-id');
+                    openForm('schedule-session-form', 'edit', sessionId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-session-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sessionId = this.getAttribute('data-id');
+                    deleteTrainingSession(sessionId);
+                });
+            });
+        }
+
+        function filterTrainingSessions() {
+            const filterValue = document.getElementById('session-view-filter').value;
+            const rows = document.querySelectorAll('#training-sessions-table tr');
+            const today = new Date().toISOString().split('T')[0];
+            
+            rows.forEach(row => {
+                const dateCell = row.querySelector('td:nth-child(4)');
+                const trainerCell = row.querySelector('td:nth-child(2)');
+                
+                if (dateCell && trainerCell) {
+                    const dateStr = dateCell.textContent.split(' ')[0];
+                    const trainer = trainerCell.textContent;
+                    
+                    let shouldShow = true;
+                    
+                    if (filterValue === 'Today') {
+                        shouldShow = dateStr === today;
+                    } else if (filterValue === 'This Week') {
+                        const sessionDate = new Date(dateStr);
+                        const todayObj = new Date(today);
+                        const diffTime = sessionDate - todayObj;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        shouldShow = diffDays >= 0 && diffDays <= 7;
+                    } else if (filterValue === 'Trainer Sessions') {
+                        shouldShow = trainer !== 'Group Class';
+                    }
+                    
+                    row.style.display = shouldShow ? '' : 'none';
+                }
+            });
+        }
+
+        function populateSessionVerificationTable() {
+            sessionVerificationTable.innerHTML = '';
+            sessionVerifications.forEach(session => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>#${session.id}</td>
+                    <td>${session.user}</td>
+                    <td>${session.type}</td>
+                    <td>${session.date}</td>
+                    <td>${session.duration}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn verify-btn" data-id="${session.id}">
+                                <i class="fas fa-check"></i> Verify
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${session.id}">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    </td>
+                `;
+                sessionVerificationTable.appendChild(row);
+            });
+            
+            document.querySelectorAll('#session-verification-table .verify-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sessionId = this.getAttribute('data-id');
+                    verifySession(sessionId);
+                });
+            });
+            
+            document.querySelectorAll('#session-verification-table .delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sessionId = this.getAttribute('data-id');
+                    rejectSession(sessionId);
+                });
+            });
+        }
+
+        function populateProductsGrid() {
+            productsGrid.innerHTML = '';
+            products.forEach(product => {
+                const formattedPrice = new Intl.NumberFormat('en-KE', {
+                    style: 'currency',
+                    currency: 'KES',
+                    minimumFractionDigits: 0
+                }).format(product.price);
+                
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.setAttribute('data-id', product.id);
+                productCard.innerHTML = `
+                    <div class="product-img">
+                        <i class="fas ${getProductIcon(product.category)}"></i>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${formattedPrice}</div>
+                        <p>${product.description}</p>
+                        <div class="product-stock">Stock: ${product.stock} units</div>
+                        <div class="product-actions">
+                            <button class="action-btn edit-btn edit-product-btn" data-id="${product.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn delete-btn delete-product-btn" data-id="${product.id}">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                `;
+                productsGrid.appendChild(productCard);
+            });
+            
+            addProductEventListeners();
+        }
+
+        function addProductEventListeners() {
+            document.querySelectorAll('.edit-product-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    openForm('add-product-form', 'edit', productId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-product-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    deleteProduct(productId);
+                });
+            });
+        }
+
+        function getProductIcon(category) {
+            switch(category) {
+                case 'supplements': return 'fa-pills';
+                case 'gear': return 'fa-dumbbell';
+                case 'apparel': return 'fa-tshirt';
+                default: return 'fa-shopping-bag';
+            }
+        }
+
+        function populateRecentActivities() {
+            recentActivitiesTable.innerHTML = '';
+            recentActivities.forEach(activity => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${activity.time}</td>
+                    <td>${activity.activity}</td>
+                    <td>${activity.user}</td>
+                    <td>${activity.details}</td>
+                `;
+                recentActivitiesTable.appendChild(row);
+            });
+        }
+
+        function populatePrivilegesList() {
+            privilegesList.innerHTML = '';
+            
+            const headerRow = document.createElement('div');
+            headerRow.className = 'privilege-item';
+            headerRow.innerHTML = `
+                <div class="privilege-name" style="font-weight: bold;">Privilege</div>
+                <div class="privilege-controls" style="display: flex; gap: 30px;">
+                    <span style="width: 60px; text-align: center; font-weight: bold;">Admin</span>
+                    <span style="width: 60px; text-align: center; font-weight: bold;">Manager</span>
+                    <span style="width: 60px; text-align: center; font-weight: bold;">Trainer</span>
+                    <span style="width: 60px; text-align: center; font-weight: bold;">Trainee</span>
+                    <span style="width: 60px; text-align: center; font-weight: bold;">Accounts</span>
+                </div>
+            `;
+            privilegesList.appendChild(headerRow);
+            
+            systemPrivileges.forEach(privilege => {
+                const privilegeRow = document.createElement('div');
+                privilegeRow.className = 'privilege-item';
+                privilegeRow.innerHTML = `
+                    <div class="privilege-name">${privilege.name}</div>
+                    <div class="privilege-controls" style="display: flex; gap: 30px;">
+                        <label class="privilege-toggle">
+                            <input type="checkbox" data-role="admin" data-privilege="${privilege.id}" ${privilege.admin ? 'checked' : ''}>
+                            <span class="privilege-slider"></span>
+                        </label>
+                        <label class="privilege-toggle">
+                            <input type="checkbox" data-role="manager" data-privilege="${privilege.id}" ${privilege.manager ? 'checked' : ''}>
+                            <span class="privilege-slider"></span>
+                        </label>
+                        <label class="privilege-toggle">
+                            <input type="checkbox" data-role="trainer" data-privilege="${privilege.id}" ${privilege.trainer ? 'checked' : ''}>
+                            <span class="privilege-slider"></span>
+                        </label>
+                        <label class="privilege-toggle">
+                            <input type="checkbox" data-role="trainee" data-privilege="${privilege.id}" ${privilege.trainee ? 'checked' : ''}>
+                            <span class="privilege-slider"></span>
+                        </label>
+                        <label class="privilege-toggle">
+                            <input type="checkbox" data-role="accounts" data-privilege="${privilege.id}" ${privilege.accounts ? 'checked' : ''}>
+                            <span class="privilege-slider"></span>
+                        </label>
+                    </div>
+                `;
+                privilegesList.appendChild(privilegeRow);
+            });
+        }
+
+        function populateRoleAssignmentTable() {
+            roleAssignmentTable.innerHTML = '';
+            
+            userAccounts.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td><span class="role-badge role-${user.role}">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span></td>
+                    <td>
+                        <select class="role-selector" data-user-id="${user.id}">
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrator</option>
+                            <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
+                            <option value="trainer" ${user.role === 'trainer' ? 'selected' : ''}>Trainer</option>
+                            <option value="trainee" ${user.role === 'trainee' ? 'selected' : ''}>Trainee</option>
+                            <option value="accounts" ${user.role === 'accounts' ? 'selected' : ''}>Accounts</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="action-btn edit-btn apply-role-btn" data-user-id="${user.id}">
+                            <i class="fas fa-check"></i> Apply
+                        </button>
+                    </td>
+                `;
+                roleAssignmentTable.appendChild(row);
+            });
+            
+            document.querySelectorAll('.apply-role-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    applyNewRole(userId);
+                });
+            });
+        }
+
+        function filterRoleAssignment() {
+            const filterValue = roleFilter.value;
+            const rows = document.querySelectorAll('#role-assignment-table tr');
+            
+            rows.forEach(row => {
+                const roleCell = row.querySelector('td:nth-child(2) span');
+                if (roleCell) {
+                    const roleText = roleCell.textContent.toLowerCase();
+                    
+                    if (filterValue === 'all' || roleText === filterValue) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('total-members').textContent = '1,247';
+            document.getElementById('active-sessions').textContent = currentMembers.length;
+            document.getElementById('pending-verifications').textContent = sessionVerifications.length;
+            document.getElementById('products-count').textContent = products.length;
+        }
+
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const formattedDate = now.toLocaleDateString('en-US', options);
+            document.getElementById('last-updated').textContent = `Last updated: ${formattedDate}`;
+        }
+
+        function logActivity(activity, user, details) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            recentActivities.unshift({
+                time: timeString,
+                activity: activity,
+                user: user,
+                details: details
+            });
+            
+            if (recentActivities.length > 10) {
+                recentActivities = recentActivities.slice(0, 10);
+            }
+            
+            populateRecentActivities();
+            updateLastUpdatedTime();
+        }
+
+        function clearActivities() {
+            if (confirm('Are you sure you want to clear all recent activities?')) {
+                recentActivities = [];
+                populateRecentActivities();
+                logActivity("Recent activities cleared", "Admin", "All activities cleared from log");
+            }
+        }
+
+        function populateUserForm(userId) {
+            const user = userAccounts.find(u => u.id == userId);
+            if (user) {
+                document.getElementById('user-name').value = user.name;
+                document.getElementById('user-email').value = user.email;
+                document.getElementById('user-phone').value = user.phone;
+                document.getElementById('user-role').value = user.role;
+                document.getElementById('user-status').value = user.status;
+            }
+        }
+
+        function populateProductForm(productId) {
+            const product = products.find(p => p.id == productId);
+            if (product) {
+                document.getElementById('product-id').value = product.id;
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-category').value = product.category;
+                document.getElementById('product-price').value = product.price;
+                document.getElementById('product-stock').value = product.stock;
+                document.getElementById('product-description').value = product.description;
+            }
+        }
+
+        function populateMembershipForm(membershipId) {
+            const membership = validMemberships.find(m => m.id == membershipId);
+            if (membership) {
+                document.getElementById('membership-id').value = membership.id;
+                document.getElementById('membership-member').value = membership.memberId;
+                document.getElementById('membership-plan').value = membership.plan.toLowerCase();
+                document.getElementById('membership-start').value = membership.start;
+                document.getElementById('membership-expiry').value = membership.expiry;
+                document.getElementById('membership-auto-renew').value = membership.autoRenew.toString();
+                document.getElementById('membership-status').value = membership.status;
+            }
+        }
+
+        function populateSessionForm(sessionId) {
+            const session = trainingSessions.find(s => s.id == sessionId);
+            if (session) {
+                document.getElementById('session-id').value = session.id;
+                
+                const [dateStr, timeStr] = session.datetime.split(' ');
+                document.getElementById('session-date').value = dateStr;
+                document.getElementById('session-time').value = timeStr;
+                
+                document.getElementById('session-trainer').value = session.trainer;
+                document.getElementById('session-trainee').value = session.trainee;
+                document.getElementById('session-type').value = session.type.toLowerCase().replace(' ', '-');
+                document.getElementById('session-status').value = session.status;
+                
+                document.getElementById('session-duration').value = 60;
+            }
+        }
+
+        function populateMemberDropdown() {
+            const memberSelect = document.getElementById('membership-member');
+            memberSelect.innerHTML = '';
+            
+            const trainees = userAccounts.filter(user => user.role === 'trainee' || user.role === 'manager' || user.role === 'trainer');
+            
+            trainees.forEach(trainee => {
+                const option = document.createElement('option');
+                option.value = trainee.id;
+                option.textContent = trainee.name;
+                memberSelect.appendChild(option);
+            });
+            
+            if (editingMembershipId) {
+                const membership = validMemberships.find(m => m.id == editingMembershipId);
+                if (membership) {
+                    memberSelect.value = membership.memberId;
+                }
+            }
+        }
+
+        function populateTrainerTraineeDropdowns() {
+            const trainerSelect = document.getElementById('session-trainer');
+            const traineeSelect = document.getElementById('session-trainee');
+            
+            trainerSelect.innerHTML = '';
+            traineeSelect.innerHTML = '';
+            
+            const groupOption = document.createElement('option');
+            groupOption.value = 'Group Class';
+            groupOption.textContent = 'Group Class';
+            traineeSelect.appendChild(groupOption);
+            
+            const trainers = userAccounts.filter(user => user.role === 'trainer' && user.status === 'active');
+            const trainees = userAccounts.filter(user => user.role === 'trainee' && user.status === 'active');
+            
+            trainers.forEach(trainer => {
+                const option = document.createElement('option');
+                option.value = trainer.name;
+                option.textContent = trainer.name;
+                trainerSelect.appendChild(option);
+            });
+            
+            trainees.forEach(trainee => {
+                const option = document.createElement('option');
+                option.value = trainee.name;
+                option.textContent = trainee.name;
+                traineeSelect.appendChild(option);
+            });
+            
+            if (editingSessionId) {
+                const session = trainingSessions.find(s => s.id == editingSessionId);
+                if (session) {
+                    trainerSelect.value = session.trainer;
+                    traineeSelect.value = session.trainee;
+                }
+            }
+        }
+
+        function saveUserAccount() {
+            const userName = document.getElementById('user-name').value;
+            const userEmail = document.getElementById('user-email').value;
+            const userPhone = document.getElementById('user-phone').value;
+            const userRole = document.getElementById('user-role').value;
+            const userStatus = document.getElementById('user-status').value;
+            
+            if (!userName || !userEmail || !userPhone) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            let activityMessage = '';
+            
+            if (editingUserId) {
+                const userIndex = userAccounts.findIndex(u => u.id == editingUserId);
+                if (userIndex !== -1) {
+                    const oldUser = userAccounts[userIndex];
+                    userAccounts[userIndex] = {
+                        ...userAccounts[userIndex],
+                        name: userName,
+                        email: userEmail,
+                        phone: userPhone,
+                        role: userRole,
+                        status: userStatus
+                    };
+                    
+                    activityMessage = `User account updated: ${userName} (${userRole})`;
+                    populateUserAccountsTable();
+                    populateRoleAssignmentTable();
+                    alert('User account updated successfully!');
+                }
+            } else {
+                const newId = userAccounts.length > 0 ? Math.max(...userAccounts.map(u => u.id)) + 1 : 1;
+                userAccounts.push({
+                    id: newId,
+                    name: userName,
+                    email: userEmail,
+                    phone: userPhone,
+                    role: userRole,
+                    status: userStatus
+                });
+                
+                activityMessage = `New user account added: ${userName} (${userRole})`;
+                populateUserAccountsTable();
+                populateRoleAssignmentTable();
+                alert('User account added successfully!');
+            }
+            
+            if (activityMessage) {
+                logActivity(activityMessage, "Admin", `Email: ${userEmail}, Status: ${userStatus}`);
+            }
+            
+            closeForm();
+        }
+
+        function saveProduct() {
+            const productId = document.getElementById('product-id').value;
+            const productName = document.getElementById('product-name').value;
+            const productCategory = document.getElementById('product-category').value;
+            const productPrice = parseFloat(document.getElementById('product-price').value);
+            const productStock = parseInt(document.getElementById('product-stock').value);
+            const productDescription = document.getElementById('product-description').value;
+            
+            if (!productName || !productPrice || !productStock) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            let activityMessage = '';
+            
+            if (editingProductId) {
+                const productIndex = products.findIndex(p => p.id == editingProductId);
+                if (productIndex !== -1) {
+                    products[productIndex] = {
+                        ...products[productIndex],
+                        name: productName,
+                        category: productCategory,
+                        price: productPrice,
+                        stock: productStock,
+                        description: productDescription
+                    };
+                    
+                    activityMessage = `Product updated: ${productName}`;
+                    populateProductsGrid();
+                    alert('Product updated successfully!');
+                }
+            } else {
+                const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                products.push({
+                    id: newId,
+                    name: productName,
+                    category: productCategory,
+                    price: productPrice,
+                    stock: productStock,
+                    description: productDescription
+                });
+                
+                activityMessage = `New product added: ${productName}`;
+                populateProductsGrid();
+                alert('Product added successfully!');
+            }
+            
+            if (activityMessage) {
+                const formattedPrice = new Intl.NumberFormat('en-KE', {
+                    style: 'currency',
+                    currency: 'KES',
+                    minimumFractionDigits: 0
+                }).format(productPrice);
+                
+                logActivity(activityMessage, "Admin", `Price: ${formattedPrice}, Category: ${productCategory}`);
+            }
+            
+            updateStats();
+            closeForm();
+        }
+
+        function saveMembership() {
+            const membershipId = document.getElementById('membership-id').value;
+            const memberId = parseInt(document.getElementById('membership-member').value);
+            const plan = document.getElementById('membership-plan').value;
+            const startDate = document.getElementById('membership-start').value;
+            const expiryDate = document.getElementById('membership-expiry').value;
+            const autoRenew = document.getElementById('membership-auto-renew').value === 'true';
+            const status = document.getElementById('membership-status').value;
+            
+            if (!memberId || !startDate || !expiryDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const member = userAccounts.find(u => u.id == memberId);
+            const memberName = member ? member.name : '';
+            
+            let activityMessage = '';
+            
+            if (editingMembershipId) {
+                const membershipIndex = validMemberships.findIndex(m => m.id == editingMembershipId);
+                if (membershipIndex !== -1) {
+                    validMemberships[membershipIndex] = {
+                        ...validMemberships[membershipIndex],
+                        memberId: memberId,
+                        name: memberName,
+                        plan: plan.charAt(0).toUpperCase() + plan.slice(1),
+                        start: startDate,
+                        expiry: expiryDate,
+                        autoRenew: autoRenew,
+                        status: status
+                    };
+                    
+                    activityMessage = `Membership updated for: ${memberName}`;
+                    populateValidMembershipsTable();
+                    alert('Membership plan updated successfully!');
+                }
+            } else {
+                const newId = validMemberships.length > 0 ? Math.max(...validMemberships.map(m => m.id)) + 1 : 1;
+                validMemberships.push({
+                    id: newId,
+                    memberId: memberId,
+                    name: memberName,
+                    plan: plan.charAt(0).toUpperCase() + plan.slice(1),
+                    start: startDate,
+                    expiry: expiryDate,
+                    autoRenew: autoRenew,
+                    status: status
+                });
+                
+                activityMessage = `New membership added for: ${memberName}`;
+                populateValidMembershipsTable();
+                alert('Membership plan added successfully!');
+            }
+            
+            if (activityMessage) {
+                logActivity(activityMessage, "Admin", `Plan: ${plan}, Status: ${status}`);
+            }
+            
+            closeForm();
+        }
+
+        function saveTrainingSession() {
+            const sessionId = document.getElementById('session-id').value;
+            const trainer = document.getElementById('session-trainer').value;
+            const trainee = document.getElementById('session-trainee').value;
+            const sessionType = document.getElementById('session-type').value;
+            const sessionDate = document.getElementById('session-date').value;
+            const sessionTime = document.getElementById('session-time').value;
+            const duration = document.getElementById('session-duration').value;
+            const status = document.getElementById('session-status').value;
+            
+            if (!trainer || !trainee || !sessionDate || !sessionTime) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const datetime = `${sessionDate} ${sessionTime}`;
+            const typeFormatted = sessionType.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            
+            let activityMessage = '';
+            
+            if (editingSessionId) {
+                const sessionIndex = trainingSessions.findIndex(s => s.id == editingSessionId);
+                if (sessionIndex !== -1) {
+                    trainingSessions[sessionIndex] = {
+                        ...trainingSessions[sessionIndex],
+                        trainer: trainer,
+                        trainee: trainee,
+                        datetime: datetime,
+                        type: typeFormatted,
+                        status: status
+                    };
+                    
+                    activityMessage = `Training session updated`;
+                    populateTrainingSessionsTable();
+                    alert('Training session updated successfully!');
+                }
+            } else {
+                const newId = trainingSessions.length > 0 ? Math.max(...trainingSessions.map(s => s.id)) + 1 : 106;
+                trainingSessions.push({
+                    id: newId,
+                    trainer: trainer,
+                    trainee: trainee,
+                    datetime: datetime,
+                    type: typeFormatted,
+                    status: status
+                });
+                
+                activityMessage = `New training session scheduled`;
+                populateTrainingSessionsTable();
+                alert('Training session scheduled successfully!');
+            }
+            
+            if (activityMessage) {
+                logActivity(activityMessage, "Admin", `${trainer} with ${trainee} on ${sessionDate} at ${sessionTime}`);
+            }
+            
+            closeForm();
+        }
+
+        function verifyUserAccount(userId) {
+            const userIndex = userAccounts.findIndex(u => u.id == userId);
+            if (userIndex !== -1) {
+                const user = userAccounts[userIndex];
+                userAccounts[userIndex].status = 'active';
+                populateUserAccountsTable();
+                
+                logActivity("User account verified", "Admin", `${user.name} (${user.email})`);
+                
+                alert('User account verified successfully!');
+            }
+        }
+
+        function deleteUserAccount(userId) {
+            if (confirm('Are you sure you want to delete this user account?')) {
+                const userIndex = userAccounts.findIndex(u => u.id == userId);
+                if (userIndex !== -1) {
+                    const user = userAccounts[userIndex];
+                    userAccounts.splice(userIndex, 1);
+                    populateUserAccountsTable();
+                    populateRoleAssignmentTable();
+                    
+                    logActivity("User account deleted", "Admin", `${user.name} (${user.email})`);
+                    
+                    alert('User account deleted successfully!');
+                }
+            }
+        }
+
+        function deleteMembership(membershipId) {
+            if (confirm('Are you sure you want to delete this membership plan?')) {
+                const membershipIndex = validMemberships.findIndex(m => m.id == membershipId);
+                if (membershipIndex !== -1) {
+                    const membership = validMemberships[membershipIndex];
+                    validMemberships.splice(membershipIndex, 1);
+                    populateValidMembershipsTable();
+                    
+                    logActivity("Membership deleted", "Admin", `${membership.name} - ${membership.plan} Plan`);
+                    
+                    alert('Membership plan deleted successfully!');
+                }
+            }
+        }
+
+        function deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                const productIndex = products.findIndex(p => p.id == productId);
+                if (productIndex !== -1) {
+                    const product = products[productIndex];
+                    products.splice(productIndex, 1);
+                    populateProductsGrid();
+                    
+                    logActivity("Product deleted from store", "Admin", `${product.name}`);
+                    
+                    updateStats();
+                    alert('Product deleted successfully!');
+                }
+            }
+        }
+
+        function deleteTrainingSession(sessionId) {
+            if (confirm('Are you sure you want to cancel this training session?')) {
+                const sessionIndex = trainingSessions.findIndex(s => s.id == sessionId);
+                if (sessionIndex !== -1) {
+                    const session = trainingSessions[sessionIndex];
+                    trainingSessions.splice(sessionIndex, 1);
+                    populateTrainingSessionsTable();
+                    
+                    logActivity("Training session cancelled", "Admin", `${session.trainer} with ${session.trainee} on ${session.datetime}`);
+                    
+                    alert('Training session cancelled successfully!');
+                }
+            }
+        }
+
+        function verifySession(sessionId) {
+            if (confirm('Verify this session?')) {
+                const sessionIndex = sessionVerifications.findIndex(session => session.id == sessionId);
+                if (sessionIndex !== -1) {
+                    const session = sessionVerifications[sessionIndex];
+                    sessionVerifications.splice(sessionIndex, 1);
+                    populateSessionVerificationTable();
+                    
+                    logActivity("Session verified", "Admin", `${session.user} - ${session.type} on ${session.date}`);
+                    
+                    updateStats();
+                    alert('Session verified successfully!');
+                }
+            }
+        }
+
+        function rejectSession(sessionId) {
+            if (confirm('Reject this session?')) {
+                const sessionIndex = sessionVerifications.findIndex(session => session.id == sessionId);
+                if (sessionIndex !== -1) {
+                    const session = sessionVerifications[sessionIndex];
+                    sessionVerifications.splice(sessionIndex, 1);
+                    populateSessionVerificationTable();
+                    
+                    logActivity("Session rejected", "Admin", `${session.user} - ${session.type} on ${session.date}`);
+                    
+                    updateStats();
+                    alert('Session rejected successfully!');
+                }
+            }
+        }
+
+        function verifyAllSessions() {
+            if (confirm('Verify all pending sessions?')) {
+                sessionVerifications.forEach(session => {
+                    logActivity("Session verified", "Admin", `${session.user} - ${session.type} on ${session.date}`);
+                });
+                
+                sessionVerifications.length = 0;
+                populateSessionVerificationTable();
+                updateStats();
+                alert('All sessions verified successfully!');
+            }
+        }
+
+        function exportCurrentMembersToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text("Current Members Report", 14, 22);
+            
+            doc.setFontSize(12);
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            doc.text(`Generated on: ${dateString}`, 14, 32);
+            
+            doc.autoTable({
+                startY: 40,
+                head: [['Member Name', 'Check-in Time', 'Current Activity', 'Duration', 'Trainer']],
+                body: currentMembers.map(member => [
+                    member.name, 
+                    member.checkin, 
+                    member.activity, 
+                    member.duration, 
+                    member.trainer
+                ]),
+                theme: 'striped',
+                headStyles: { fillColor: [44, 62, 80] }
+            });
+            
+            doc.save(`current-members-${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}.pdf`);
+            
+            logActivity("Exported current members to PDF", "Admin", `File: current-members-${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}.pdf`);
+        }
+
+        function searchUsers() {
+            const searchTerm = searchUsersInput.value.toLowerCase();
+            const filteredUsers = userAccounts.filter(user => 
+                user.name.toLowerCase().includes(searchTerm) || 
+                user.email.toLowerCase().includes(searchTerm) ||
+                user.role.toLowerCase().includes(searchTerm)
+            );
+            
+            userAccountsTable.innerHTML = '';
+            filteredUsers.forEach(user => {
+                const statusClass = `status-${user.status}`;
+                const statusText = user.status.charAt(0).toUpperCase() + user.status.slice(1);
+                const roleClass = `role-${user.role}`;
+                const roleText = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}<br><small>${user.phone}</small></td>
+                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" data-id="${user.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn verify-btn" data-id="${user.id}">
+                                <i class="fas fa-check"></i> Verify
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${user.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                userAccountsTable.appendChild(row);
+            });
+            
+            addUserTableEventListeners();
+        }
+
+        function applyNewRole(userId) {
+            const userIndex = userAccounts.findIndex(u => u.id == userId);
+            if (userIndex !== -1) {
+                const user = userAccounts[userIndex];
+                const roleSelector = document.querySelector(`select[data-user-id="${userId}"]`);
+                const newRole = roleSelector.value;
+                
+                userAccounts[userIndex].role = newRole;
+                
+                populateUserAccountsTable();
+                populateRoleAssignmentTable();
+                
+                logActivity("User role changed", "Admin", `${user.name} changed to ${newRole} role`);
+                
+                alert(`User role changed to ${newRole} successfully!`);
+            }
+        }
+
+        function savePrivileges() {
+            const checkboxes = document.querySelectorAll('#privileges-list input[type="checkbox"]');
+            
+            checkboxes.forEach(checkbox => {
+                const privilegeId = parseInt(checkbox.getAttribute('data-privilege'));
+                const role = checkbox.getAttribute('data-role');
+                const isChecked = checkbox.checked;
+                
+                const privilegeIndex = systemPrivileges.findIndex(p => p.id === privilegeId);
+                if (privilegeIndex !== -1) {
+                    systemPrivileges[privilegeIndex][role] = isChecked;
+                }
+            });
+            
+            logActivity("System privileges updated", "Admin", "User permissions modified");
+            
+            alert('Privileges saved successfully!');
+        }
+    </script>
+    <script src="generate-config.js"></script>
+</body>
+</html>

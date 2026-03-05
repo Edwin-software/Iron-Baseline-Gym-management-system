@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Trainer Dashboard · Gym OS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f7fc;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .dashboard {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(0,0,0,0.03);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .header {
+      background: #1e2b3c;
+      color: white;
+      padding: 20px 18px 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .header i {
+      font-size: 1.3rem;
+      color: #9ab3d0;
+    }
+    .trainer-badge {
+      background: #2d3f55;
+      border-radius: 40px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .bottom-nav {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 12px 0;
+      border-top: 1px solid #e9eef2;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.02);
+      z-index: 10;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #6b7b8d;
+      font-size: 0.7rem;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .nav-item i {
+      font-size: 1.4rem;
+      margin-bottom: 2px;
+    }
+    .nav-item.active {
+      color: #1e3b5c;
+      font-weight: 500;
+    }
+
+    .content {
+      padding: 16px 16px 20px 16px;
+      background: #f4f7fc;
+    }
+
+    .section {
+      display: block;
+    }
+    .section.hidden {
+      display: none;
+    }
+
+    .stats-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .stat-card {
+      background: white;
+      flex: 1 1 calc(50% - 10px);
+      min-width: 120px;
+      border-radius: 20px;
+      padding: 16px 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+      cursor: pointer;
+    }
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: #6f8ba4;
+      letter-spacing: 0.3px;
+    }
+    .stat-card .value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #142433;
+      line-height: 1.2;
+    }
+    .badge-pending {
+      background: #f2e9db;
+      color: #b47d3c;
+      padding: 4px 8px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .quick-btn {
+      background: white;
+      border-radius: 40px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #1a2d40;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      flex: 1 0 auto;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+    }
+    .quick-btn i {
+      color: #346a9e;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: 20px 0 12px 0;
+    }
+    .section-title h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #11212e;
+    }
+    .section-title a {
+      font-size: 0.85rem;
+      color: #346a9e;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .client-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .client-row {
+      background: white;
+      border-radius: 20px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      cursor: pointer;
+    }
+    .client-avatar {
+      width: 48px;
+      height: 48px;
+      background: #d9e3ed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #1e3b5c;
+      font-size: 1.2rem;
+    }
+    .client-info {
+      flex: 1;
+    }
+    .client-name {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+    .client-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.75rem;
+      color: #6f8ba4;
+      margin-top: 4px;
+    }
+    .sub-badge {
+      background: #e1f0fa;
+      color: #0d4b75;
+      padding: 2px 10px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .inactive-client {
+      opacity: 0.6;
+    }
+
+    .calendar-card {
+      background: white;
+      border-radius: 24px;
+      padding: 16px;
+    }
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #ecf1f5;
+    }
+    .session-time {
+      background: #edf3fa;
+      border-radius: 30px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .session-name {
+      font-weight: 500;
+      flex: 1;
+    }
+    .attendance-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 10px;
+      background: #2d8515;
+    }
+    .session-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .session-actions i {
+      cursor: pointer;
+      color: #6f8ba4;
+    }
+    .session-actions i:hover {
+      color: #1e3b5c;
+    }
+    .approved {
+      color: #2d8515;
+    }
+    .pending {
+      color: #b47d3c;
+    }
+
+    .workout-plan {
+      background: white;
+      border-radius: 20px;
+      padding: 14px;
+    }
+    .exercise-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #ecf1f5;
+    }
+    .set-badge {
+      background: #eef3f9;
+      padding: 5px 12px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+    }
+    .edit-exercise {
+      margin-left: auto;
+      cursor: pointer;
+      color: #346a9e;
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 24px;
+      padding: 12px 8px 8px 8px;
+      margin: 16px 0 8px 0;
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+      max-height: 170px;
+    }
+
+    .message-preview {
+      background: #ffffffdd;
+      border-radius: 24px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 14px;
+      cursor: pointer;
+    }
+
+    .admin-section {
+      background: #eaeef3;
+      border-radius: 24px;
+      padding: 16px;
+      margin: 18px 0;
+      border: 1px dashed #557c9c;
+    }
+
+    .message-list {
+      background: white;
+      border-radius: 24px;
+      padding: 16px;
+    }
+    .message-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #ecf1f5;
+      cursor: pointer;
+    }
+    .message-item:hover {
+      background: #f8faff;
+    }
+    .message-sender {
+      font-weight: 600;
+    }
+    .message-preview-text {
+      color: #6f8ba4;
+      font-size: 0.9rem;
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 24px;
+      padding: 16px;
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .chat-message {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+    .message-bubble {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 20px;
+      position: relative;
+    }
+    .message-bubble.sent {
+      background: #346a9e;
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    .message-bubble.received {
+      background: #f0f2f5;
+      color: #1a2d40;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .message-time {
+      font-size: 0.7rem;
+      color: #8a9aa8;
+      margin-top: 4px;
+      margin-left: 8px;
+    }
+    .chat-input-area {
+      display: flex;
+      gap: 12px;
+      padding: 16px 0 0 0;
+      border-top: 1px solid #ecf1f5;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #dde3e9;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .chat-input:focus {
+      border-color: #346a9e;
+    }
+    .send-btn {
+      background: #346a9e;
+      color: white;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .send-btn i {
+      font-size: 1.2rem;
+    }
+
+    .schedule-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .time-slot {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .book-slot {
+      background: #346a9e;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    .session-detail-modal {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .session-detail-field {
+      margin-bottom: 16px;
+    }
+    .session-detail-field label {
+      display: block;
+      font-size: 0.85rem;
+      color: #6f8ba4;
+      margin-bottom: 4px;
+    }
+    .session-detail-field input, .session-detail-field select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #dde3e9;
+      border-radius: 16px;
+      font-size: 1rem;
+    }
+    .session-detail-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .session-detail-actions button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .save-btn {
+      background: #346a9e;
+      color: white;
+    }
+    .edit-btn {
+      background: #f0f2f5;
+      color: #1a2d40;
+    }
+    .delete-btn {
+      background: #ffebee;
+      color: #c94a4a;
+    }
+
+    img, svg, canvas, .dashboard, .content, .client-row {
+      max-width: 100%;
+    }
+
+    .back-btn {
+      color: #346a9e;
+      cursor: pointer;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    .client-detail-card {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .filter-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 30px;
+      background: white;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .filter-btn.active {
+      background: #346a9e;
+      color: white;
+    }
+    .logout-btn {
+      background: #ffebee;
+      color: #c94a4a;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+<div class="dashboard" id="trainerDashboard">
+  <div class="header">
+    <div>
+      <h1>TrainerOS</h1>
+      <div class="trainer-badge"><i class="fas fa-dumbbell"></i> <span>Mike Wright · head trainer</span></div>
+    </div>
+   
+    <div>
+     <div><i &nmbsp class="fas fa-bell" id="notificationBell" onclick ="messages()"></i><br></div>
+    <button onclick="logout()" class="logout-btn">Logout</button>
+    </div>
+    
+  </div>
+
+  <div class="content" id="mainContent">
+    <!-- Home Section -->
+    <div id="homeSection" class="section">
+      <div class="stats-grid">
+        <div class="stat-card" data-section="clients">
+          <div class="label">active clients</div>
+          <div class="value">24</div>
+          <span style="font-size:0.8rem;">▲ 3 this week</span>
+        </div>
+        <div class="stat-card" data-section="schedule">
+          <div class="label">today's sessions</div>
+          <div class="value">8</div>
+          <span class="badge-pending"><i class="far fa-clock"></i> 2 pending</span>
+        </div>
+        <div class="stat-card" data-section="messages">
+          <div class="label">messages</div>
+          <div class="value">5</div>
+          <span class="badge-pending">3 unread</span>
+        </div>
+        <div class="stat-card" data-section="progress">
+          <div class="label">progress %</div>
+          <div class="value">87%</div>
+          <span>avg client</span>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="quick-btn" data-section="workout"><i class="fas fa-plus-circle"></i> workout</button>
+        <button class="quick-btn" data-section="sessions"><i class="fas fa-calendar-check"></i> session</button>
+        <button class="quick-btn" data-section="messages"><i class="fas fa-comment"></i> message</button>
+        <button class="quick-btn" data-section="progress"><i class="fas fa-chart-line"></i> progress</button>
+      </div>
+
+      <div class="section-title">
+        <h3>👥 my clients (8)</h3>
+        <a data-section="clients">view all <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="client-list" id="clientList"></div>
+
+      <div class="section-title" style="margin-top: 24px;">
+        <h3>📅 today's schedule</h3>
+        <a data-section="schedule"><i class="fas fa-chevron-right"></i></a>
+      </div>
+      <div class="calendar-card" id="sessionList"></div>
+
+      <div class="section-title">
+        <h3>💪 active plan: Emily R.</h3>
+        <a data-section="workout">modify</a>
+      </div>
+      <div class="workout-plan">
+        <div class="exercise-row">
+          <span style="font-weight:500;">Barbell squat</span>
+          <span class="set-badge">4x8</span>
+          <span>80kg</span>
+          <i class="fas fa-edit edit-exercise"></i>
+        </div>
+        <div class="exercise-row">
+          <span>Bench press</span>
+          <span class="set-badge">3x10</span>
+          <span>55kg</span>
+          <i class="fas fa-edit edit-exercise"></i>
+        </div>
+        <div class="exercise-row">
+          <span>Pull ups</span>
+          <span class="set-badge">3x6</span>
+          <span>BW</span>
+          <i class="fas fa-edit edit-exercise"></i>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h3>📊 strength progress (last 6 weeks)</h3>
+      </div>
+      <div class="chart-container">
+        <canvas id="progressChart"></canvas>
+      </div>
+
+      <div style="background:#eaf7ea; border-radius:20px; padding:16px; margin: 14px 0;">
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><i class="fas fa-apple-alt"></i> <strong>nutrition note · Tom</strong></div>
+        <p style="font-size:0.9rem;">High protein, low carb until Friday. Compliance 80% 👍</p>
+      </div>
+
+      <div class="message-preview" data-section="messages">
+        <i class="fas fa-comment-dots" style="font-size:2rem; color:#32648c;"></i>
+        <div><strong>message from Lisa</strong><br> <span style="font-size:0.85rem; color:#3d5d7a;">"can we move tomorrow's session?"</span></div>
+      </div>
+
+      <div class="admin-section" id="adminPanel" style="display: none;">
+        <h4 style="margin-bottom:10px;"><i class="fas fa-user-tie"></i> head trainer controls</h4>
+        <p style="font-size:0.9rem;">assign trainers · system-wide reports</p>
+        <div style="background:white; border-radius:16px; padding:8px; margin-top:8px;">
+          <span>trainer productivity: 92%</span><br>
+          <span>total active clients: 112</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Section -->
+    <div id="workoutSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>Workout Plans</h2>
+      <div class="workout-plan" style="margin-top: 16px;">
+        <div class="section-title">
+          <h3>Emily R. - Strength Program</h3>
+          <a id="addExerciseBtn">+ Add Exercise</a>
+        </div>
+        <div id="workoutExercises">
+          <div class="exercise-row">
+            <span style="font-weight:500;">Barbell squat</span>
+            <span class="set-badge">4x8</span>
+            <span>80kg</span>
+            <i class="fas fa-trash edit-exercise" style="color:#c94a4a;"></i>
+          </div>
+          <div class="exercise-row">
+            <span>Bench press</span>
+            <span class="set-badge">3x10</span>
+            <span>55kg</span>
+            <i class="fas fa-trash edit-exercise" style="color:#c94a4a;"></i>
+          </div>
+          <div class="exercise-row">
+            <span>Pull ups</span>
+            <span class="set-badge">3x6</span>
+            <span>BW</span>
+            <i class="fas fa-trash edit-exercise" style="color:#c94a4a;"></i>
+          </div>
+        </div>
+      </div>
+      <div class="workout-plan" style="margin-top: 16px;">
+        <div class="section-title">
+          <h3>Tom S. - Fat Loss</h3>
+          <a>View Plan</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sessions Section -->
+    <div id="sessionsSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>Session Management</h2>
+      <div class="calendar-card" style="margin-top: 16px;" id="fullSessionList"></div>
+    </div>
+
+    <!-- Session Detail Section -->
+    <div id="sessionDetailSection" class="section hidden">
+      <div class="back-btn" data-section="schedule"><i class="fas fa-arrow-left"></i> Back to Schedule</div>
+      <h2>Session Details</h2>
+      <div class="session-detail-modal" id="sessionDetailModal">
+        <div class="session-detail-field">
+          <label>Client Name</label>
+          <input type="text" id="sessionClientName" value="Emily R.">
+        </div>
+        <div class="session-detail-field">
+          <label>Date</label>
+          <input type="date" id="sessionDate">
+        </div>
+        <div class="session-detail-field">
+          <label>Time</label>
+          <input type="time" id="sessionTime" value="09:00">
+        </div>
+        <div class="session-detail-field">
+          <label>Session Type</label>
+          <select id="sessionType">
+            <option value="personal">Personal Training</option>
+            <option value="group">Group Session</option>
+            <option value="assessment">Assessment</option>
+          </select>
+        </div>
+        <div class="session-detail-field">
+          <label>Status</label>
+          <select id="sessionStatus">
+            <option value="scheduled">Scheduled</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="session-detail-field">
+          <label>Notes</label>
+          <input type="text" id="sessionNotes" placeholder="Add any notes...">
+        </div>
+        <div class="session-detail-actions">
+          <button class="delete-btn" id="deleteSessionBtn"><i class="fas fa-trash"></i> Delete</button>
+          <button class="edit-btn" id="editSessionBtn"><i class="fas fa-edit"></i> Edit</button>
+          <button class="save-btn" id="saveSessionBtn"><i class="fas fa-save"></i> Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages Section -->
+    <div id="messagesSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>Messages</h2>
+      <div class="message-list" style="margin-top: 16px;" id="messageList"></div>
+    </div>
+
+    <!-- Chat Detail Section -->
+    <div id="chatDetailSection" class="section hidden">
+      <div class="back-btn" data-section="messages"><i class="fas fa-arrow-left"></i> Back to Messages</div>
+      <div id="chatHeader" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div class="client-avatar" id="chatAvatar">LM</div>
+        <div>
+          <h3 id="chatUserName">Lisa M.</h3>
+          <span style="color: #2d8515; font-size: 0.85rem;">● Online</span>
+        </div>
+      </div>
+      <div class="chat-container" id="chatContainer">
+        <div class="chat-messages" id="chatMessages">
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+          <button class="send-btn" id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div id="progressSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>Client Progress</h2>
+      <div class="client-list" style="margin-top: 16px;" id="progressClientList"></div>
+    </div>
+
+    <!-- Clients Section -->
+    <div id="clientsSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>All Clients</h2>
+      <div class="filter-buttons">
+        <button class="filter-btn active" id="showAllClients">All Clients</button>
+        <button class="filter-btn" id="showActiveClients">Active</button>
+        <button class="filter-btn" id="showInactiveClients">Inactive</button>
+      </div>
+      <div class="client-list" id="allClientsList"></div>
+    </div>
+
+    <!-- Client Detail Section -->
+    <div id="clientDetailSection" class="section hidden">
+      <div class="back-btn" data-section="clients"><i class="fas fa-arrow-left"></i> Back to Clients</div>
+      <div id="clientDetailContent" class="client-detail-card"></div>
+    </div>
+
+    <!-- Schedule Section -->
+    <div id="scheduleSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>Schedule Your Time</h2>
+      <div class="schedule-grid" style="margin-top: 16px;" id="scheduleSlots"></div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div id="analyticsSection" class="section hidden">
+      <div class="back-btn" data-section="home"><i class="fas fa-arrow-left"></i> Back to Dashboard</div>
+      <h2>Analytics</h2>
+      <div class="chart-container" style="margin-top: 16px;">
+        <canvas id="analyticsChart"></canvas>
+      </div>
+      <div class="stats-grid" style="margin-top: 16px;">
+        <div class="stat-card">
+          <div class="label">session completion</div>
+          <div class="value">94%</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">client retention</div>
+          <div class="value">88%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" data-section="home"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" data-section="clients"><i class="fas fa-users"></i><span>Clients</span></div>
+    <div class="nav-item" data-section="schedule"><i class="fas fa-calendar-alt"></i><span>Schedule</span></div>
+    <div class="nav-item" data-section="analytics"><i class="fas fa-chart-bar"></i><span>Analytics</span></div>
+    <div class="nav-item" data-section="messages"><i class="fas fa-comment"></i><span>Chat</span></div>
+  </div>
+</div>
+
+<script>
+ // At the very top of your script, before any other code
+const DB_NAME = 'TrainerDashboardDB';
+const DB_VERSION = 2;
+
+// Then your existing code continues...
+(function() {
+    // Remove the DB_NAME and DB_VERSION from here
+    let selectedClientId = null;
+    // ... rest of your IIFE code
+})();
+
+// Then update your openDatabase function to use the global variables
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (ev) => {
+      const db = ev.target.result;
+      if (!db.objectStoreNames.contains('clients')) {
+        const store = db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('trainerId', 'trainerId', { unique: false });
+        store.createIndex('status', 'status', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('sessions')) {
+        const store = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('trainerId', 'trainerId', { unique: false });
+        store.createIndex('date', 'date', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('messages')) {
+        const store = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('conversationId', 'conversationId', { unique: false });
+      }
+    };
+  });
+}
+
+         function logout() {
+            
+            window.location.href = 'authentication.html';
+         }
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (ev) => {
+          const db = ev.target.result;
+          if (!db.objectStoreNames.contains('clients')) {
+            const store = db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('trainerId', 'trainerId', { unique: false });
+            store.createIndex('status', 'status', { unique: false });
+          }
+          if (!db.objectStoreNames.contains('sessions')) {
+            const store = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('trainerId', 'trainerId', { unique: false });
+            store.createIndex('date', 'date', { unique: false });
+          }
+          if (!db.objectStoreNames.contains('messages')) {
+            const store = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('conversationId', 'conversationId', { unique: false });
+          }
+        };
+      });
+    }
+
+    async function seedInitialData() {
+      const db = await openDatabase();
+      const tx = db.transaction(['clients', 'sessions', 'messages'], 'readwrite');
+      const clientStore = tx.objectStore('clients');
+      const sessionStore = tx.objectStore('sessions');
+      const messageStore = tx.objectStore('messages');
+
+      const count = await new Promise(res => {
+        const req = clientStore.count();
+        req.onsuccess = () => res(req.result);
+      });
+
+      if (count === 0) {
+        const demoClients = [
+          { trainerId: 1, name: 'Emily R.', goals: 'strength +5kg', attendance: '28/30', subscription: 'active', avatar: 'ER', medical: 'none', status: 'active' },
+          { trainerId: 1, name: 'Tom S.', goals: 'fat loss', attendance: '22/30', subscription: 'active', avatar: 'TS', medical: 'asthma', status: 'active' },
+          { trainerId: 1, name: 'Lisa M.', goals: 'muscle tone', attendance: '27/30', subscription: 'pending', avatar: 'LM', status: 'active' },
+          { trainerId: 1, name: 'David K.', goals: 'endurance', attendance: '20/30', subscription: 'active', avatar: 'DK', status: 'active' },
+          { trainerId: 1, name: 'Sarah P.', goals: 'weight loss', attendance: '15/30', subscription: 'inactive', avatar: 'SP', status: 'inactive' },
+          { trainerId: 1, name: 'Mike J.', goals: 'strength', attendance: '10/30', subscription: 'inactive', avatar: 'MJ', status: 'inactive' },
+        ];
+        demoClients.forEach(c => clientStore.add(c));
+      }
+
+      const sessionCount = await new Promise(res => {
+        const req = sessionStore.count();
+        req.onsuccess = () => res(req.result);
+      });
+      if (sessionCount === 0) {
+        const times = ['09:00 AM', '10:30 AM', '12:00 PM', '04:00 PM'];
+        const clients = ['Emily R.', 'Tom S.', 'Lisa M.', 'David K.'];
+        const statuses = ['approved', 'pending', 'approved', 'pending'];
+        const today = new Date().toISOString().split('T')[0];
+        for (let i=0; i<4; i++) {
+          sessionStore.add({ 
+            clientName: clients[i], 
+            time: times[i], 
+            date: today,
+            status: statuses[i],
+            trainerId: 1,
+            type: 'personal',
+            notes: ''
+          });
+        }
+      }
+
+      const messageCount = await new Promise(res => {
+        const req = messageStore.count();
+        req.onsuccess = () => res(req.result);
+      });
+      if (messageCount === 0) {
+        const conversations = [
+          { id: 'lisa', name: 'Lisa M.', avatar: 'LM' },
+          { id: 'tom', name: 'Tom S.', avatar: 'TS' },
+          { id: 'emily', name: 'Emily R.', avatar: 'ER' }
+        ];
+        
+        const messages = [
+          { conversationId: 'lisa', from: 'Lisa M.', text: 'can we move tomorrow\'s session?', time: '10:30 AM', timestamp: Date.now() - 3600000, unread: true, type: 'received' },
+          { conversationId: 'lisa', from: 'Mike', text: 'Sure, what time works for you?', time: '10:32 AM', timestamp: Date.now() - 3580000, unread: false, type: 'sent' },
+          { conversationId: 'lisa', from: 'Lisa M.', text: 'How about 3pm?', time: '10:35 AM', timestamp: Date.now() - 3550000, unread: true, type: 'received' },
+          { conversationId: 'tom', from: 'Tom S.', text: 'Thanks for the workout plan!', time: '9:15 AM', timestamp: Date.now() - 7200000, unread: true, type: 'received' },
+          { conversationId: 'tom', from: 'Mike', text: 'You\'re welcome! Let me know how it goes', time: '9:20 AM', timestamp: Date.now() - 7150000, unread: false, type: 'sent' },
+          { conversationId: 'emily', from: 'Emily R.', text: 'New PR on squats today!', time: 'Yesterday', timestamp: Date.now() - 86400000, unread: false, type: 'received' },
+          { conversationId: 'emily', from: 'Mike', text: 'Amazing! What weight did you hit?', time: 'Yesterday', timestamp: Date.now() - 86000000, unread: false, type: 'sent' },
+        ];
+        messages.forEach(m => messageStore.add(m));
+      }
+    }
+
+    async function renderClients() {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('clients', 'readonly');
+        const store = tx.objectStore('clients');
+        const index = store.index('trainerId');
+        const range = IDBKeyRange.only(1);
+        const clients = await new Promise(res => {
+          const data = [];
+          index.openCursor(range).onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+              data.push(cursor.value);
+              cursor.continue();
+            } else {
+              res(data);
+            }
+          };
+        });
+
+        const container = document.getElementById('clientList');
+        if (clients.length) {
+          const activeClients = clients.filter(c => c.status === 'active');
+          container.innerHTML = activeClients.slice(0, 3).map(c => `
+            <div class="client-row" data-client-id="${c.id}">
+              <div class="client-avatar">${c.avatar || c.name.substring(0,2)}</div>
+              <div class="client-info">
+                <div class="client-name">${c.name}</div>
+                <div class="client-meta">
+                  <span>🎯 ${c.goals || 'fitness'}</span>
+                  <span>📅 ${c.attendance || '24/30'}</span>
+                </div>
+              </div>
+              <span class="sub-badge">${c.subscription === 'active' ? '✅ active' : '⏳ pending'}</span>
+            </div>
+          `).join('');
+        }
+      } catch {
+        document.getElementById('clientList').innerHTML = `
+          <div class="client-row" data-client-id="1"><div class="client-avatar">ER</div><div class="client-info"><div class="client-name">Emily R.</div><div class="client-meta"><span>🎯 strength</span><span>📅 28/30</span></div></div><span class="sub-badge">✅ active</span></div>
+          <div class="client-row" data-client-id="2"><div class="client-avatar">TS</div><div class="client-info"><div class="client-name">Tom S.</div><div class="client-meta"><span>🎯 fat loss</span><span>📅 22/30</span></div></div><span class="sub-badge">✅ active</span></div>
+          <div class="client-row" data-client-id="3"><div class="client-avatar">LM</div><div class="client-info"><div class="client-name">Lisa M.</div><div class="client-meta"><span>🎯 muscle tone</span><span>📅 27/30</span></div></div><span class="sub-badge">⏳ pending</span></div>
+        `;
+      }
+    }
+
+    async function renderAllClients(filter = 'all') {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('clients', 'readonly');
+        const store = tx.objectStore('clients');
+        const index = store.index('trainerId');
+        const range = IDBKeyRange.only(1);
+        const clients = await new Promise(res => {
+          const data = [];
+          index.openCursor(range).onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+              data.push(cursor.value);
+              cursor.continue();
+            } else {
+              res(data);
+            }
+          };
+        });
+
+        const container = document.getElementById('allClientsList');
+        let filteredClients = clients;
+        if (filter === 'active') {
+          filteredClients = clients.filter(c => c.status === 'active');
+        } else if (filter === 'inactive') {
+          filteredClients = clients.filter(c => c.status === 'inactive');
+        }
+        
+        if (filteredClients.length) {
+          container.innerHTML = filteredClients.map(c => `
+            <div class="client-row ${c.status === 'inactive' ? 'inactive-client' : ''}" data-client-id="${c.id}">
+              <div class="client-avatar">${c.avatar || c.name.substring(0,2)}</div>
+              <div class="client-info">
+                <div class="client-name">${c.name}</div>
+                <div class="client-meta">
+                  <span>🎯 ${c.goals || 'fitness'}</span>
+                  <span>📅 ${c.attendance || '24/30'}</span>
+                </div>
+              </div>
+              <span class="sub-badge">${c.status === 'active' ? '✅ active' : '❌ inactive'}</span>
+            </div>
+          `).join('');
+        }
+      } catch {
+        document.getElementById('allClientsList').innerHTML = `
+          <div class="client-row" data-client-id="1"><div class="client-avatar">ER</div><div class="client-info"><div class="client-name">Emily R.</div><div class="client-meta"><span>🎯 strength</span><span>📅 28/30</span></div></div><span class="sub-badge">✅ active</span></div>
+          <div class="client-row" data-client-id="2"><div class="client-avatar">TS</div><div class="client-info"><div class="client-name">Tom S.</div><div class="client-meta"><span>🎯 fat loss</span><span>📅 22/30</span></div></div><span class="sub-badge">✅ active</span></div>
+          <div class="client-row" data-client-id="5" class="inactive-client"><div class="client-avatar">SP</div><div class="client-info"><div class="client-name">Sarah P.</div><div class="client-meta"><span>🎯 weight loss</span><span>📅 15/30</span></div></div><span class="sub-badge">❌ inactive</span></div>
+        `;
+      }
+    }
+
+    async function renderSessions() {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('sessions', 'readonly');
+        const store = tx.objectStore('sessions');
+        const sessions = await new Promise(res => {
+          const data = [];
+          store.openCursor().onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+              if (cursor.value.trainerId === 1) data.push(cursor.value);
+              cursor.continue();
+            } else res(data);
+          };
+        });
+        const container = document.getElementById('sessionList');
+        if (sessions.length) {
+          container.innerHTML = sessions.slice(0, 3).map(s => `
+            <div class="session-item" data-session-id="${s.id}" onclick="openSessionDetail(${s.id})">
+              <span class="session-time">${s.time}</span>
+              <span class="session-name">${s.clientName}</span>
+              <span class="attendance-dot"></span>
+              <span class="${s.status === 'approved' ? 'approved' : 'pending'}">${s.status}</span>
+            </div>
+          `).join('');
+        }
+      } catch {
+        document.getElementById('sessionList').innerHTML = `
+          <div class="session-item" onclick="openSessionDetail(1)"><span class="session-time">09:00</span><span class="session-name">Emily R.</span><span class="attendance-dot"></span><span class="approved">approved</span></div>
+          <div class="session-item" onclick="openSessionDetail(2)"><span class="session-time">11:00</span><span class="session-name">Tom S.</span><span class="pending">pending</span></div>
+          <div class="session-item" onclick="openSessionDetail(3)"><span class="session-time">16:30</span><span class="session-name">Lisa M.</span><span class="pending">pending</span></div>
+        `;
+      }
+    }
+
+    async function renderFullSessions() {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('sessions', 'readonly');
+        const store = tx.objectStore('sessions');
+        const sessions = await new Promise(res => {
+          const data = [];
+          store.openCursor().onsuccess = (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+              if (cursor.value.trainerId === 1) data.push(cursor.value);
+              cursor.continue();
+            } else res(data);
+          };
+        });
+        const container = document.getElementById('fullSessionList');
+        if (sessions.length) {
+          container.innerHTML = sessions.map(s => `
+            <div class="session-item" onclick="openSessionDetail(${s.id})">
+              <span class="session-time">${s.time}</span>
+              <span class="session-name">${s.clientName}</span>
+              <span class="attendance-dot"></span>
+              <span class="${s.status === 'approved' ? 'approved' : 'pending'}">${s.status}</span>
+            </div>
+          `).join('');
+        }
+      } catch {
+        document.getElementById('fullSessionList').innerHTML = `
+          <div class="session-item" onclick="openSessionDetail(1)"><span class="session-time">09:00</span><span class="session-name">Emily R.</span><span class="approved">approved</span></div>
+          <div class="session-item" onclick="openSessionDetail(2)"><span class="session-time">11:00</span><span class="session-name">Tom S.</span><span class="pending">pending</span></div>
+          <div class="session-item" onclick="openSessionDetail(3)"><span class="session-time">16:30</span><span class="session-name">Lisa M.</span><span class="pending">pending</span></div>
+        `;
+      }
+    }
+
+    async function openSessionDetail(sessionId) {
+      currentSessionId = sessionId;
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('sessions', 'readonly');
+        const store = tx.objectStore('sessions');
+        const session = await new Promise(res => {
+          const req = store.get(parseInt(sessionId));
+          req.onsuccess = () => res(req.result);
+        });
+        
+        if (session) {
+          document.getElementById('sessionClientName').value = session.clientName || '';
+          document.getElementById('sessionDate').value = session.date || new Date().toISOString().split('T')[0];
+          
+          const timeMatch = session.time ? session.time.match(/(\d{2}):(\d{2})/) : null;
+          if (timeMatch) {
+            document.getElementById('sessionTime').value = `${timeMatch[1]}:${timeMatch[2]}`;
+          } else {
+            document.getElementById('sessionTime').value = '09:00';
+          }
+          
+          document.getElementById('sessionType').value = session.type || 'personal';
+          document.getElementById('sessionStatus').value = session.status || 'scheduled';
+          document.getElementById('sessionNotes').value = session.notes || '';
+        }
+      } catch {
+        document.getElementById('sessionClientName').value = 'Emily R.';
+        document.getElementById('sessionDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('sessionTime').value = '09:00';
+        document.getElementById('sessionType').value = 'personal';
+        document.getElementById('sessionStatus').value = 'scheduled';
+        document.getElementById('sessionNotes').value = '';
+      }
+      showSection('sessionDetail');
+    }
+async function saveSessionDetail() {
+  const sessionData = {
+    clientName: document.getElementById('sessionClientName').value,
+    date: document.getElementById('sessionDate').value,
+    time: document.getElementById('sessionTime').value,
+    type: document.getElementById('sessionType').value,
+    status: document.getElementById('sessionStatus').value,
+    notes: document.getElementById('sessionNotes').value,
+    trainerId: 1
+  };
+  
+  try {
+    const db = await openDatabase();
+    const tx = db.transaction('sessions', 'readwrite');
+    const store = tx.objectStore('sessions');
+    
+    if (currentSessionId) {
+      // Update existing session
+      const existing = await new Promise((resolve, reject) => {
+        const req = store.get(parseInt(currentSessionId));
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      
+      if (existing) {
+        await new Promise((resolve, reject) => {
+          const req = store.put({ ...existing, ...sessionData, id: parseInt(currentSessionId) });
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+        alert('Session updated successfully!');
+      } else {
+        alert('Session not found');
+      }
+    } else {
+      // Add new session
+      await new Promise((resolve, reject) => {
+        const req = store.add(sessionData);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+      alert('Session created successfully!');
+    }
+    
+    // Refresh the sessions display
+    await renderFullSessions();
+    showSection('schedule');
+    
+  } catch (error) {
+    console.error('Error saving session:', error);
+    alert('Error saving session. Please try again. ' + error.message);
+  }
+}
+   
+
+async function deleteSessionDetail() {
+  if (confirm('Are you sure you want to delete this session?')) {
+    try {
+      const db = await openDatabase();
+      const tx = db.transaction('sessions', 'readwrite');
+      const store = tx.objectStore('sessions');
+      
+      if (currentSessionId) {
+        // First check if the session exists
+        const session = await new Promise((resolve, reject) => {
+          const req = store.get(parseInt(currentSessionId));
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        
+        if (session) {
+          await new Promise((resolve, reject) => {
+            const req = store.delete(parseInt(currentSessionId));
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+          });
+          
+          alert('Session deleted successfully!');
+          console.log('Session deleted from IndexedDB:', currentSessionId);
+        } else {
+          alert('Session not found in database');
+        }
+      }
+      
+      // Refresh the sessions display
+      await renderFullSessions();
+      showSection('schedule');
+      
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      alert('Error deleting session. Please try again. ' + error.message);
+    }
+  }
+}
+
+    function renderMessages() {
+      try {
+        const container = document.getElementById('messageList');
+        container.innerHTML = `
+          <div class="message-item" onclick="openChat('lisa', 'Lisa M.', 'LM')">
+            <div class="message-sender">Lisa M. <span style="color:#c94a4a; font-size:0.8rem;">●</span></div>
+            <div class="message-preview-text">can we move tomorrow's session?</div>
+            <div style="font-size:0.7rem; color:#6f8ba4;">10:30 AM</div>
+          </div>
+          <div class="message-item" onclick="openChat('tom', 'Tom S.', 'TS')">
+            <div class="message-sender">Tom S. <span style="color:#c94a4a; font-size:0.8rem;">●</span></div>
+            <div class="message-preview-text">Thanks for the workout plan!</div>
+            <div style="font-size:0.7rem; color:#6f8ba4;">9:15 AM</div>
+          </div>
+          <div class="message-item" onclick="openChat('emily', 'Emily R.', 'ER')">
+            <div class="message-sender">Emily R.</div>
+            <div class="message-preview-text">New PR on squats today!</div>
+            <div style="font-size:0.7rem; color:#6f8ba4;">Yesterday</div>
+          </div>
+        `;
+      } catch {
+        document.getElementById('messageList').innerHTML = `<div>Error loading messages</div>`;
+      }
+    }
+
+    function openChat(conversationId, userName, avatar) {
+      currentChatUser = { id: conversationId, name: userName, avatar: avatar };
+      document.getElementById('chatUserName').textContent = userName;
+      document.getElementById('chatAvatar').textContent = avatar;
+      
+      const mockMessages = [
+        { type: 'received', text: 'can we move tomorrow\'s session?', time: '10:30 AM' },
+        { type: 'sent', text: 'Sure, what time works for you?', time: '10:32 AM' },
+        { type: 'received', text: 'How about 3pm?', time: '10:35 AM' }
+      ];
+      
+      renderChatMessages(mockMessages);
+      showSection('chatDetail');
+    }
+
+    function renderChatMessages(messages) {
+      const container = document.getElementById('chatMessages');
+      container.innerHTML = messages.map(m => `
+        <div class="chat-message" style="align-items: ${m.type === 'sent' ? 'flex-end' : 'flex-start'};">
+          <div class="message-bubble ${m.type === 'sent' ? 'sent' : 'received'}">
+            ${m.text}
+          </div>
+          <div class="message-time">${m.time}</div>
+        </div>
+      `).join('');
+      
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const messageText = input.value.trim();
+      if (!messageText || !currentChatUser) return;
+      
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const chatMessages = document.getElementById('chatMessages');
+      chatMessages.innerHTML += `
+        <div class="chat-message" style="align-items: flex-end;">
+          <div class="message-bubble sent">
+            ${messageText}
+          </div>
+          <div class="message-time">${timeString}</div>
+        </div>
+      `;
+      
+      input.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function renderProgressClients() {
+      const container = document.getElementById('progressClientList');
+      container.innerHTML = `
+        <div class="client-row" onclick="showClientProgress(1)">
+          <div class="client-avatar">ER</div>
+          <div class="client-info">
+            <div class="client-name">Emily R.</div>
+            <div class="client-meta">progress: 92%</div>
+          </div>
+          <i class="fas fa-chart-line" style="color:#346a9e;"></i>
+        </div>
+        <div class="client-row" onclick="showClientProgress(2)">
+          <div class="client-avatar">TS</div>
+          <div class="client-info">
+            <div class="client-name">Tom S.</div>
+            <div class="client-meta">progress: 78%</div>
+          </div>
+          <i class="fas fa-chart-line" style="color:#346a9e;"></i>
+        </div>
+      `;
+    }
+
+    function renderScheduleSlots() {
+      const slots = document.getElementById('scheduleSlots');
+      const times = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'];
+      slots.innerHTML = times.map(time => `
+        <div class="time-slot">
+          <span>${time}</span>
+          <button class="book-slot" onclick="bookTimeSlot('${time}')">Book</button>
+        </div>
+      `).join('');
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(sectionId + 'Section').classList.remove('hidden');
+      
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      const navItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+      if (navItem) navItem.classList.add('active');
+      
+      if (sectionId === 'sessions') renderFullSessions();
+      if (sectionId === 'messages') renderMessages();
+      if (sectionId === 'progress') renderProgressClients();
+      if (sectionId === 'clients') renderAllClients(currentFilter);
+      if (sectionId === 'schedule') renderScheduleSlots();
+      if (sectionId === 'analytics') renderAnalytics();
+    }
+
+    window.showClientDetail = async function(clientId) {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('clients', 'readonly');
+        const store = tx.objectStore('clients');
+        const client = await new Promise(res => {
+          const req = store.get(parseInt(clientId));
+          req.onsuccess = () => res(req.result);
+        });
+        
+        const content = document.getElementById('clientDetailContent');
+        content.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <div class="client-avatar" style="width: 64px; height: 64px; font-size: 1.8rem;">${client.avatar || client.name.substring(0,2)}</div>
+            <div>
+              <h3>${client.name}</h3>
+              <span class="sub-badge">${client.status === 'active' ? '✅ active' : '❌ inactive'}</span>
+            </div>
+          </div>
+          <p><strong>Goals:</strong> ${client.goals || 'Not specified'}</p>
+          <p><strong>Attendance:</strong> ${client.attendance || '24/30'}</p>
+          <p><strong>Medical notes:</strong> ${client.medical || 'None'}</p>
+          <p><strong>Subscription:</strong> ${client.subscription || 'active'}</p>
+          <div style="margin-top: 16px; display: flex; gap: 8px;">
+            <button class="quick-btn" onclick="showSection('progress')">View Progress</button>
+            <button class="quick-btn" onclick="openChat('${client.name.toLowerCase().substring(0,4)}', '${client.name}', '${client.avatar}')">Message</button>
+          </div>
+        `;
+        showSection('clientDetail');
+      } catch {
+        showSection('clientDetail');
+      }
+    };
+
+    window.openSessionDetail = openSessionDetail;
+    window.saveSessionDetail = saveSessionDetail;
+    window.deleteSessionDetail = deleteSessionDetail;
+    window.editSessionDetail = function() {
+      document.getElementById('sessionClientName').disabled = false;
+      document.getElementById('sessionDate').disabled = false;
+      document.getElementById('sessionTime').disabled = false;
+      document.getElementById('sessionType').disabled = false;
+      document.getElementById('sessionStatus').disabled = false;
+      document.getElementById('sessionNotes').disabled = false;
+    };
+
+    window.bookTimeSlot = function(time) {
+      currentSessionId = null;
+      document.getElementById('sessionClientName').value = '';
+      document.getElementById('sessionDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('sessionTime').value = time.replace(' AM', '').replace(' PM', '');
+      document.getElementById('sessionType').value = 'personal';
+      document.getElementById('sessionStatus').value = 'scheduled';
+      document.getElementById('sessionNotes').value = '';
+      showSection('sessionDetail');
+    };
+
+    window.showClientProgress = function(clientId) {
+      showSection('progress');
+    };
+
+    window.openChat = openChat;
+
+    function renderAnalytics() {
+      const ctx = document.getElementById('analyticsChart')?.getContext('2d');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+              label: 'Sessions Completed',
+              data: [42, 48, 45, 52],
+              backgroundColor: '#346a9e'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true
+          }
+        });
+      }
+    }
+
+    document.querySelectorAll('[data-section]').forEach(element => {
+      element.addEventListener('click', (e) => {
+        const section = e.currentTarget.dataset.section;
+        showSection(section);
+      });
+    });
+
+    document.getElementById('showAllClients')?.addEventListener('click', () => {
+      currentFilter = 'all';
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('showAllClients').classList.add('active');
+      renderAllClients('all');
+    });
+    
+    document.getElementById('showActiveClients')?.addEventListener('click', () => {
+      currentFilter = 'active';
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('showActiveClients').classList.add('active');
+      renderAllClients('active');
+    });
+    
+    document.getElementById('showInactiveClients')?.addEventListener('click', () => {
+      currentFilter = 'inactive';
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('showInactiveClients').classList.add('active');
+      renderAllClients('inactive');
+    });
+
+    document.getElementById('sendMessageBtn')?.addEventListener('click', sendMessage);
+    document.getElementById('saveSessionBtn')?.addEventListener('click', saveSessionDetail);
+    document.getElementById('deleteSessionBtn')?.addEventListener('click', deleteSessionDetail);
+    document.getElementById('editSessionBtn')?.addEventListener('click', function() {
+      document.getElementById('sessionClientName').disabled = false;
+      document.getElementById('sessionDate').disabled = false;
+      document.getElementById('sessionTime').disabled = false;
+      document.getElementById('sessionType').disabled = false;
+      document.getElementById('sessionStatus').disabled = false;
+      document.getElementById('sessionNotes').disabled = false;
+    });
+    
+    document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    document.getElementById('addExerciseBtn')?.addEventListener('click', () => {
+      const newExercise = prompt('Enter exercise name:');
+      if (newExercise) {
+        const container = document.getElementById('workoutExercises');
+        container.innerHTML += `
+          <div class="exercise-row">
+            <span>${newExercise}</span>
+            <span class="set-badge">3x10</span>
+            <span>0kg</span>
+            <i class="fas fa-trash edit-exercise" style="color:#c94a4a;"></i>
+          </div>
+        `;
+      }
+    });
+
+    document.getElementById('notificationBell').addEventListener('click', () => {
+      alert('📬 3 unread messages · 2 session reminders');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.client-row') && !e.target.closest('.session-actions')) {
+        const clientRow = e.target.closest('.client-row');
+        const clientId = clientRow.dataset.clientId;
+        if (clientId) {
+          showClientDetail(clientId);
+        }
+      }
+    });
+
+    const ctx = document.getElementById('progressChart')?.getContext('2d');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'],
+          datasets: [{
+            label: 'avg strength (kg)',
+            data: [72, 75, 74, 79, 82, 87],
+            borderColor: '#1e4f7a',
+            backgroundColor: '#1e4f7a22',
+            tension: 0.2,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    const userRole = 'head_trainer';
+    if (userRole === 'head_trainer') {
+      document.getElementById('adminPanel').style.display = 'block';
+    }
+
+    seedInitialData().then(() => {
+      renderClients();
+      renderSessions();
+    }).catch(() => {
+      renderClients();
+      renderSessions();
+    });
+  
+</script>
+</body>
+</html>

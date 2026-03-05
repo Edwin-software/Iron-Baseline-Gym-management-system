@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Pro Gym Managers' Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2c3e50;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary-color: #3498db;
+            --secondary-light: #5dade2;
+            --secondary-dark: #2980b9;
+            --success-color: #27ae60;
+            --success-light: #2ecc71;
+            --warning-color: #f39c12;
+            --warning-light: #f1c40f;
+            --danger-color: #e74c3c;
+            --danger-light: #e74c3c;
+            --info-color: #17a2b8;
+            --light-color: #ecf0f1;
+            --light-gray: #f8f9fa;
+            --medium-gray: #bdc3c7;
+            --dark-gray: #95a5a6;
+            --dark-color: #2c3e50;
+            --text-color: #333;
+            --text-light: #666;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --box-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition-fast: all 0.15s ease;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-gray);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+
+        a:hover {
+            color: var(--secondary-dark);
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-header h2 i {
+            width: 36px;
+            height: 36px;
+            background: var(--secondary-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1.25rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1.25rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: var(--secondary-color);
+        }
+
+        .sidebar-menu i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1.125rem;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: var(--transition);
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .user-profile:hover {
+            background: var(--light-gray);
+        }
+
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .user-profile h3 {
+            font-size: 0.9375rem;
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .user-profile p {
+            font-size: 0.75rem;
+            color: var(--dark-gray);
+            margin: 0;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.5rem 2rem;
+            border-bottom: 1px solid var(--light-color);
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            background: var(--light-gray);
+            color: var(--text-color);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-fast);
+        }
+
+        .nav-btn:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .nav-btn i {
+            font-size: 1rem;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            padding: 1.5rem 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--dark-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1.2;
+            margin: 0.5rem 0;
+        }
+
+        .card-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .card-change.positive {
+            color: var(--success-color);
+        }
+
+        .card-change.negative {
+            color: var(--danger-color);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-icon.icon-1 { background: var(--success-color); }
+        .card-icon.icon-2 { background: var(--secondary-color); }
+        .card-icon.icon-3 { background: var(--warning-color); }
+        .card-icon.icon-4 { background: var(--info-color); }
+
+        .dashboard-section {
+            background: white;
+            border-radius: var(--border-radius);
+            margin: 0 2rem 2rem;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--secondary-color);
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: var(--border-radius);
+            transition: var(--transition-fast);
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        .btn:focus {
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--secondary-dark);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 600px;
+        }
+
+        thead {
+            background-color: var(--light-gray);
+        }
+
+        th {
+            padding: 1rem;
+            font-weight: 600;
+            text-align: left;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--light-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light-color);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .chart {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-placeholder {
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
+            color: var(--dark-gray);
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 10rem;
+        }
+
+        .status-completed, .status-paid {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-pending, .status-unpaid {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+        }
+
+        .status-delayed {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .employee-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--dark-gray);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition-fast);
+        }
+
+        .close-modal:hover {
+            background-color: var(--light-gray);
+            color: var(--danger-color);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            display: block;
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.9375rem;
+            color: var(--text-color);
+            background-color: white;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            transition: var(--transition-fast);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--secondary-color);
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: var(--box-shadow);
+            z-index: 1;
+            border-radius: var(--border-radius);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid var(--light-color);
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--light-gray);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 3000;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .notification.show {
+            display: flex;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .notification-icon {
+            font-size: 1.25rem;
+        }
+
+        .notification.success .notification-icon {
+            color: var(--success-color);
+        }
+
+        .notification.error .notification-icon {
+            color: var(--danger-color);
+        }
+
+        .notification.warning .notification-icon {
+            color: var(--warning-color);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--dark-gray);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 70px;
+            }
+            
+            .sidebar {
+                width: var(--sidebar-width);
+            }
+            
+            .sidebar-header h2 span,
+            .sidebar-menu span {
+                display: none;
+            }
+            
+            .sidebar-header h2 i {
+                margin: 0 auto;
+            }
+            
+            .sidebar-menu a {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+            
+            .sidebar-menu i {
+                margin-right: 0;
+                font-size: 1.25rem;
+            }
+            
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .stats-cards,
+            .dashboard-section {
+                padding: 1rem;
+                margin: 0 1rem 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions button {
+                width: 100%;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            html {
+                font-size: 14px;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8125rem;
+            }
+            
+            .table-container {
+                margin: 0 -1rem;
+                padding: 0 1rem;
+            }
+            
+            table {
+                min-width: 500px;
+            }
+            
+            .modal-content {
+                margin: 1rem;
+            }
+        }
+
+        @media print {
+            .sidebar,
+            .header,
+            .section-actions,
+            .btn,
+            .notification,
+            .dashboard-nav {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .dashboard-section {
+                margin: 0;
+                box-shadow: none;
+                break-inside: avoid;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--medium-gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-gray);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--medium-gray) var(--light-gray);
+        }
+
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid var(--light-gray);
+            border-top-color: var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-dumbbell"></i> <span>Pro Gym Managers' Dashboard</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+                <li><a href="#" data-section="operations"><i class="fas fa-cogs"></i> <span>Operations</span></a></li>
+                <li><a href="#" data-section="employees"><i class="fas fa-users"></i> <span>Employees</span></a></li>
+                <li><a href="#" data-section="payslips"><i class="fas fa-file-invoice-dollar"></i> <span>Payslips</span></a></li>
+                <li><a href="#" data-section="accounts"><i class="fas fa-chart-bar"></i> <span>Accounts</span></a></li>
+                <li><a href="#" data-section="cashflow"><i class="fas fa-money-bill-wave"></i> <span>Cash Flow</span></a></li>
+                <li><a href="#" data-section="reports"><i class="fas fa-chart-pie"></i> <span>Reports</span></a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <div class="header">
+                <div class="header-left">
+                    <h1 id="page-title">Pro Gym Managers' Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="dashboard-nav">
+                        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> Home</a>
+                        <a href="admin-dashboard.html" class="nav-btn"><i class="fas fa-user-tie"></i> Admin</a>
+                        <a href="user-dashboard.html" class="nav-btn"><i class="fas fa-user"></i> User</a>
+                        <a href="guest-dashboard.html" class="nav-btn"><i class="fas fa-user-friends"></i> Guest</a>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Manager Profile">
+                        <div>
+                            <h3>John Manager</h3>
+                            <p>Gym Operations Manager</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-cards">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Total Revenue</div>
+                            <div class="card-value" id="revenue-value">KSh 12,458,000</div>
+                            <div class="card-change positive"><i class="fas fa-arrow-up"></i> 12.5% from last month</div>
+                        </div>
+                        <div class="card-icon icon-1">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Active Employees</div>
+                            <div class="card-value" id="employees-value">48/52</div>
+                            <div class="card-change positive"><i class="fas fa-arrow-up"></i> 4 new hires</div>
+                        </div>
+                        <div class="card-icon icon-2">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Pending Tasks</div>
+                            <div class="card-value" id="tasks-value">23</div>
+                            <div class="card-change negative"><i class="fas fa-arrow-down"></i> 5 overdue</div>
+                        </div>
+                        <div class="card-icon icon-3">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Salaries Paid</div>
+                            <div class="card-value" id="salaries-value">85%</div>
+                            <div class="card-change positive"><i class="fas fa-arrow-up"></i> 42 of 52 employees</div>
+                        </div>
+                        <div class="card-icon icon-4">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section id="dashboard-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-home"></i> Overview</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" id="export-report-btn"><i class="fas fa-download"></i> Export Report</button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline"><i class="fas fa-calendar-alt"></i> This Month <i class="fas fa-caret-down"></i></button>
+                            <div class="dropdown-content">
+                                <a href="#" data-period="this-month">This Month</a>
+                                <a href="#" data-period="this-quarter">This Quarter</a>
+                                <a href="#" data-period="this-year">This Year</a>
+                                <a href="#" data-period="last-month">Last Month</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart">
+                        <h3 class="chart-title">Monthly Revenue Trend (KSh)</h3>
+                        <div class="chart-placeholder" id="revenue-chart">
+                            <i class="fas fa-chart-line fa-3x" style="color: var(--medium-gray);"></i>
+                            <p>Revenue chart would appear here</p>
+                        </div>
+                    </div>
+                    <div class="chart">
+                        <h3 class="chart-title">Employee Productivity</h3>
+                        <div class="chart-placeholder" id="productivity-chart">
+                            <i class="fas fa-chart-bar fa-3x" style="color: var(--medium-gray);"></i>
+                            <p>Productivity chart would appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="operations-section" class="dashboard-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-cogs"></i> Business Operations</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" id="add-operation-btn"><i class="fas fa-plus"></i> Add Operation</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Operation ID</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="operations-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="employees-section" class="dashboard-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-users"></i> Employee Progress Tracking</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary"><i class="fas fa-user-plus"></i> Add Employee</button>
+                        <button class="btn btn-outline"><i class="fas fa-filter"></i> Filter</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Current Task</th>
+                                <th>Progress</th>
+                                <th>Performance</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="payslips-section" class="dashboard-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-file-invoice-dollar"></i> Salary & Payslip Management</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-success" id="run-payroll-btn"><i class="fas fa-play-circle"></i> Run Payroll</button>
+                        <button class="btn btn-outline"><i class="fas fa-print"></i> Print Reports</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Salary (KSh)</th>
+                                <th>Status</th>
+                                <th>Payment Date</th>
+                                <th>Payslip</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payslips-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="accounts-section" class="dashboard-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-chart-bar"></i> Accounts Dashboard</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" id="export-statements-btn"><i class="fas fa-file-export"></i> Export Statements</button>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart">
+                        <h3 class="chart-title">Income vs Expenses (Last 6 Months - KSh)</h3>
+                        <div class="chart-placeholder" id="income-expenses-chart">
+                            <i class="fas fa-chart-line fa-3x" style="color: var(--medium-gray);"></i>
+                            <p>Income vs Expenses chart would appear here</p>
+                        </div>
+                    </div>
+                    <div class="chart">
+                        <h3 class="chart-title">Account Balances (KSh)</h3>
+                        <div class="chart-placeholder" id="balances-chart">
+                            <i class="fas fa-chart-pie fa-3x" style="color: var(--medium-gray);"></i>
+                            <p>Account balances would appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="cashflow-section" class="dashboard-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-money-bill-wave"></i> Cash Flow Tracking</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" id="add-transaction-btn"><i class="fas fa-plus"></i> Add Transaction</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Income (KSh)</th>
+                                <th>Expense (KSh)</th>
+                                <th>Balance (KSh)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashflow-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="reports-section" class="dashboard-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-chart-pie"></i> Business Reports</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" id="generate-statement-btn"><i class="fas fa-file-pdf"></i> Generate Statement</button>
+                        <button class="btn btn-outline" id="email-report-btn"><i class="fas fa-envelope"></i> Email Report</button>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart">
+                        <h3 class="chart-title">Monthly Performance Summary</h3>
+                        <div class="chart-placeholder" id="performance-chart">
+                            <i class="fas fa-chart-line fa-3x" style="color: var(--medium-gray);"></i>
+                            <p>Performance summary would appear here</p>
+                        </div>
+                    </div>
+                    <div class="chart">
+                        <h3 class="chart-title">Department-wise Analysis</h3>
+                        <div class="chart-placeholder" id="department-chart">
+                            <i class="fas fa-chart-pie fa-3x" style="color: var(--medium-gray);"></i>
+                            <p>Department analysis would appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="payslip-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Employee Payslip</h3>
+                <button class="close-modal" data-modal="payslip-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="payslip-content"></div>
+        </div>
+    </div>
+
+    <div id="add-operation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Operation</h3>
+                <button class="close-modal" data-modal="add-operation-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-operation-form">
+                    <div class="form-group">
+                        <label for="operation-name">Operation Name</label>
+                        <input type="text" id="operation-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="operation-department">Department</label>
+                        <select id="operation-department" required>
+                            <option value="">Select Department</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Production">Production</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="IT">IT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="operation-description">Description</label>
+                        <textarea id="operation-description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="operation-due-date">Due Date</label>
+                        <input type="date" id="operation-due-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="operation-priority">Priority</label>
+                        <select id="operation-priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" data-modal="add-operation-modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Operation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-operation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Operation Details</h3>
+                <button class="close-modal" data-modal="view-operation-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="operation-details-content"></div>
+        </div>
+    </div>
+
+    <div id="add-transaction-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Transaction</h3>
+                <button class="close-modal" data-modal="add-transaction-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-transaction-form">
+                    <div class="form-group">
+                        <label for="transaction-date">Date</label>
+                        <input type="date" id="transaction-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transaction-description">Description</label>
+                        <input type="text" id="transaction-description" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transaction-category">Category</label>
+                        <select id="transaction-category" required>
+                            <option value="">Select Category</option>
+                            <option value="Income">Income</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transaction-amount">Amount (KSh)</label>
+                        <input type="number" id="transaction-amount" min="0" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" data-modal="add-transaction-modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Transaction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <div class="notification-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="notification-content">
+            <div class="notification-title" id="notification-title">Success</div>
+            <div class="notification-message" id="notification-message">Operation completed successfully</div>
+        </div>
+        <button class="notification-close" onclick="hideNotification()">&times;</button>
+    </div>
+
+    <script>
+        let db;
+        const DB_NAME = 'ManagerDashboardDB';
+        const DB_VERSION = 1;
+
+        const operationsData = [
+            { id: "OP-001", name: "Q4 Sales Campaign", department: "Sales", status: "In Progress", progress: 75, dueDate: "2023-10-15", description: "Execute Q4 sales campaign targeting corporate clients", priority: "high" },
+            { id: "OP-002", name: "Product Launch", department: "Marketing", status: "Completed", progress: 100, dueDate: "2023-10-10", description: "Launch new product line in the market", priority: "high" },
+            { id: "OP-003", name: "Equipment Maintenance", department: "Production", status: "Delayed", progress: 40, dueDate: "2023-10-20", description: "Quarterly maintenance of production equipment", priority: "medium" },
+            { id: "OP-004", name: "Employee Training", department: "HR", status: "In Progress", progress: 60, dueDate: "2023-10-18", description: "Conduct safety and compliance training", priority: "medium" },
+            { id: "OP-005", name: "Budget Review", department: "Finance", status: "On Hold", progress: 20, dueDate: "2023-10-25", description: "Review and adjust annual budget", priority: "low" },
+            { id: "OP-006", name: "System Upgrade", department: "IT", status: "In Progress", progress: 90, dueDate: "2023-10-12", description: "Upgrade server infrastructure", priority: "high" }
+        ];
+
+        const employeesData = [
+            { name: "Sarah Johnson", department: "Sales", task: "Quarterly Sales Report", progress: "high", performance: "Excellent", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+            { name: "Michael Chen", department: "Marketing", task: "Campaign Analytics", progress: "medium", performance: "Good", avatar: "https://randomuser.me/api/portraits/men/22.jpg" },
+            { name: "Robert Williams", department: "Production", task: "Quality Control Check", progress: "low", performance: "Needs Improvement", avatar: "https://randomuser.me/api/portraits/men/67.jpg" },
+            { name: "Lisa Rodriguez", department: "HR", task: "Employee Onboarding", progress: "high", performance: "Excellent", avatar: "https://randomuser.me/api/portraits/women/33.jpg" },
+            { name: "David Miller", department: "Finance", task: "Budget Planning", progress: "medium", performance: "Good", avatar: "https://randomuser.me/api/portraits/men/75.jpg" },
+            { name: "Emma Wilson", department: "IT", task: "System Security Update", progress: "high", performance: "Excellent", avatar: "https://randomuser.me/api/portraits/women/68.jpg" }
+        ];
+
+        const payslipsData = [
+            { name: "Sarah Johnson", department: "Sales", salary: "KSh 450,000", status: "Paid", date: "2023-10-05", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+            { name: "Michael Chen", department: "Marketing", salary: "KSh 380,000", status: "Paid", date: "2023-10-05", avatar: "https://randomuser.me/api/portraits/men/22.jpg" },
+            { name: "Robert Williams", department: "Production", salary: "KSh 320,000", status: "Unpaid", date: "Pending", avatar: "https://randomuser.me/api/portraits/men/67.jpg" },
+            { name: "Lisa Rodriguez", department: "HR", salary: "KSh 400,000", status: "Paid", date: "2023-10-05", avatar: "https://randomuser.me/api/portraits/women/33.jpg" },
+            { name: "David Miller", department: "Finance", salary: "KSh 420,000", status: "Unpaid", date: "Pending", avatar: "https://randomuser.me/api/portraits/men/75.jpg" },
+            { name: "Emma Wilson", department: "IT", salary: "KSh 480,000", status: "Paid", date: "2023-10-05", avatar: "https://randomuser.me/api/portraits/women/68.jpg" }
+        ];
+
+        let cashflowData = [
+            { date: "2023-10-01", description: "Client Payment - ABC Corp", category: "Income", income: "KSh 1,250,000", expense: "-", balance: "KSh 4,230,000" },
+            { date: "2023-10-02", description: "Office Rent", category: "Expense", income: "-", expense: "KSh 320,000", balance: "KSh 3,910,000" },
+            { date: "2023-10-03", description: "Software Subscription", category: "Expense", income: "-", expense: "KSh 45,000", balance: "KSh 3,865,000" },
+            { date: "2023-10-04", description: "Client Payment - XYZ Ltd", category: "Income", income: "KSh 830,000", expense: "-", balance: "KSh 4,695,000" },
+            { date: "2023-10-05", description: "Employee Salaries", category: "Expense", income: "-", expense: "KSh 2,840,000", balance: "KSh 1,855,000" },
+            { date: "2023-10-06", description: "Utility Bills", category: "Expense", income: "-", expense: "KSh 120,000", balance: "KSh 1,735,000" }
+        ];
+
+        const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+        const pageTitle = document.getElementById('page-title');
+        const sections = document.querySelectorAll('.dashboard-section');
+        const operationsTableBody = document.getElementById('operations-table-body');
+        const employeesTableBody = document.getElementById('employees-table-body');
+        const payslipsTableBody = document.getElementById('payslips-table-body');
+        const cashflowTableBody = document.getElementById('cashflow-table-body');
+        const payslipModal = document.getElementById('payslip-modal');
+        const addOperationModal = document.getElementById('add-operation-modal');
+        const viewOperationModal = document.getElementById('view-operation-modal');
+        const addTransactionModal = document.getElementById('add-transaction-modal');
+        const closeModalBtns = document.querySelectorAll('.close-modal');
+        const payslipContent = document.getElementById('payslip-content');
+        const runPayrollBtn = document.getElementById('run-payroll-btn');
+        const exportReportBtn = document.getElementById('export-report-btn');
+        const exportStatementsBtn = document.getElementById('export-statements-btn');
+        const addOperationBtn = document.getElementById('add-operation-btn');
+        const addTransactionBtn = document.getElementById('add-transaction-btn');
+        const addOperationForm = document.getElementById('add-operation-form');
+        const addTransactionForm = document.getElementById('add-transaction-form');
+        const periodDropdown = document.querySelectorAll('.dropdown-content a');
+        const operationDetailsContent = document.getElementById('operation-details-content');
+        const generateStatementBtn = document.getElementById('generate-statement-btn');
+        const emailReportBtn = document.getElementById('email-report-btn');
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notification-title');
+        const notificationMessage = document.getElementById('notification-message');
+
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = function(event) {
+                console.error('IndexedDB error:', event.target.error);
+                loadFromMemory();
+            };
+
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadFromDB();
+            };
+
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                
+                if (!db.objectStoreNames.contains('operations')) {
+                    db.createObjectStore('operations', { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains('employees')) {
+                    db.createObjectStore('employees', { keyPath: 'name' });
+                }
+                if (!db.objectStoreNames.contains('payslips')) {
+                    db.createObjectStore('payslips', { keyPath: 'name' });
+                }
+                if (!db.objectStoreNames.contains('cashflow')) {
+                    db.createObjectStore('cashflow', { keyPath: 'date', autoIncrement: true });
+                }
+            };
+        }
+
+        function loadFromDB() {
+            if (!db) {
+                loadFromMemory();
+                return;
+            }
+
+            const transaction = db.transaction(['operations', 'employees', 'payslips', 'cashflow'], 'readonly');
+            
+            transaction.objectStore('operations').getAll().onsuccess = function(event) {
+                if (event.target.result.length > 0) {
+                    operationsData.length = 0;
+                    operationsData.push(...event.target.result);
+                }
+                populateOperationsTable();
+            };
+
+            transaction.objectStore('employees').getAll().onsuccess = function(event) {
+                if (event.target.result.length > 0) {
+                    employeesData.length = 0;
+                    employeesData.push(...event.target.result);
+                }
+                populateEmployeesTable();
+            };
+
+            transaction.objectStore('payslips').getAll().onsuccess = function(event) {
+                if (event.target.result.length > 0) {
+                    payslipsData.length = 0;
+                    payslipsData.push(...event.target.result);
+                }
+                populatePayslipsTable();
+            };
+
+            transaction.objectStore('cashflow').getAll().onsuccess = function(event) {
+                if (event.target.result.length > 0) {
+                    cashflowData.length = 0;
+                    cashflowData.push(...event.target.result);
+                }
+                populateCashflowTable();
+            };
+        }
+
+        function loadFromMemory() {
+            populateOperationsTable();
+            populateEmployeesTable();
+            populatePayslipsTable();
+            populateCashflowTable();
+        }
+
+        function saveToDB(storeName, data) {
+            if (!db) return;
+            
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            
+            if (Array.isArray(data)) {
+                data.forEach(item => store.put(item));
+            } else {
+                store.put(data);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initDB();
+            showSection('dashboard');
+            setupEventListeners();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('transaction-date').value = today;
+            
+            setInterval(updateLiveStats, 15000);
+        });
+
+        function showSection(sectionId) {
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            document.getElementById(`${sectionId}-section`).style.display = 'block';
+            
+            const sectionTitles = {
+                'dashboard': 'Pro Gym Managers\' Dashboard',
+                'operations': 'Operations Tracking',
+                'employees': 'Employee Progress',
+                'payslips': 'Salary & Payslips',
+                'accounts': 'Accounts Dashboard',
+                'cashflow': 'Cash Flow Tracking',
+                'reports': 'Business Reports'
+            };
+            
+            pageTitle.textContent = sectionTitles[sectionId] || 'Pro Gym Managers\' Dashboard';
+            
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-section') === sectionId) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        function populateOperationsTable() {
+            if (!operationsTableBody) return;
+            
+            operationsTableBody.innerHTML = '';
+            
+            operationsData.forEach(operation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${operation.id}</td>
+                    <td>${operation.department}</td>
+                    <td><span class="status-badge status-${operation.status.toLowerCase().replace(' ', '-')}">${operation.status}</span></td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${operation.progress}%; background-color: ${getProgressColor(operation.progress)}"></div>
+                        </div>
+                        <small>${operation.progress}%</small>
+                    </td>
+                    <td>${formatDate(operation.dueDate)}</td>
+                    <td>
+                        <button class="btn btn-sm view-operation-btn" data-id="${operation.id}" style="padding: 5px 10px;"><i class="fas fa-eye"></i> View</button>
+                    </td>
+                `;
+                operationsTableBody.appendChild(row);
+            });
+            
+            document.querySelectorAll('.view-operation-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const operationId = this.getAttribute('data-id');
+                    showOperationDetails(operationId);
+                });
+            });
+        }
+
+        function populateEmployeesTable() {
+            if (!employeesTableBody) return;
+            
+            employeesTableBody.innerHTML = '';
+            
+            employeesData.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <img src="${employee.avatar}" alt="${employee.name}" class="employee-avatar">
+                        ${employee.name}
+                    </td>
+                    <td>${employee.department}</td>
+                    <td>${employee.task}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${employee.progress === 'high' ? '85%' : employee.progress === 'medium' ? '65%' : '40%'}; background-color: ${employee.progress === 'high' ? '#27ae60' : employee.progress === 'medium' ? '#f39c12' : '#e74c3c'}"></div>
+                        </div>
+                        <small>${employee.progress === 'high' ? '85%' : employee.progress === 'medium' ? '65%' : '40%'}</small>
+                    </td>
+                    <td>${employee.performance}</td>
+                    <td>
+                        <button class="btn btn-sm" style="padding: 5px 10px;"><i class="fas fa-chart-line"></i> Track</button>
+                    </td>
+                `;
+                employeesTableBody.appendChild(row);
+            });
+        }
+
+        function populatePayslipsTable() {
+            if (!payslipsTableBody) return;
+            
+            payslipsTableBody.innerHTML = '';
+            
+            payslipsData.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <img src="${employee.avatar}" alt="${employee.name}" class="employee-avatar">
+                        ${employee.name}
+                    </td>
+                    <td>${employee.department}</td>
+                    <td>${employee.salary}</td>
+                    <td><span class="status-badge ${employee.status === 'Paid' ? 'status-paid' : 'status-unpaid'}">${employee.status}</span></td>
+                    <td>${employee.date === 'Pending' ? 'Pending' : formatDate(employee.date)}</td>
+                    <td>
+                        <button class="btn btn-sm view-payslip-btn" data-name="${employee.name}" data-salary="${employee.salary}" data-department="${employee.department}" data-status="${employee.status}" data-date="${employee.date}" style="padding: 5px 10px;">
+                            <i class="fas fa-file-invoice"></i> View
+                        </button>
+                    </td>
+                `;
+                payslipsTableBody.appendChild(row);
+            });
+            
+            document.querySelectorAll('.view-payslip-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    showPayslipModal(
+                        this.getAttribute('data-name'),
+                        this.getAttribute('data-salary'),
+                        this.getAttribute('data-department'),
+                        this.getAttribute('data-status'),
+                        this.getAttribute('data-date')
+                    );
+                });
+            });
+        }
+
+        function populateCashflowTable() {
+            if (!cashflowTableBody) return;
+            
+            cashflowTableBody.innerHTML = '';
+            
+            cashflowData.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(transaction.date)}</td>
+                    <td>${transaction.description}</td>
+                    <td>${transaction.category}</td>
+                    <td style="color: ${transaction.income !== '-' ? '#27ae60' : 'inherit'}">${transaction.income}</td>
+                    <td style="color: ${transaction.expense !== '-' ? '#e74c3c' : 'inherit'}">${transaction.expense}</td>
+                    <td><strong>${transaction.balance}</strong></td>
+                `;
+                cashflowTableBody.appendChild(row);
+            });
+        }
+
+        function showPayslipModal(name, salary, department, status, date) {
+            if (!payslipContent) return;
+            
+            const formattedDate = date === 'Pending' ? 'Pending' : formatDate(date);
+            const totalEarnings = calculateTotalEarnings(salary);
+            const netPay = calculateNetPay(salary);
+            
+            payslipContent.innerHTML = `
+                <div style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h4 style="margin-bottom: 5px;">${name}</h4>
+                            <p style="color: #666; margin-bottom: 5px;">${department} Department</p>
+                            <p style="color: #666">Employee ID: EMP-${Math.floor(1000 + Math.random() * 9000)}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin-bottom: 5px;"><strong>Payment Status:</strong> <span class="status-badge ${status === 'Paid' ? 'status-paid' : 'status-unpaid'}">${status}</span></p>
+                            <p style="margin-bottom: 5px;"><strong>Payment Date:</strong> ${formattedDate}</p>
+                            <p><strong>Pay Period:</strong> October 1-31, 2023</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <h5 style="margin-bottom: 10px; color: #2c3e50;">Earnings</h5>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Basic Salary</span>
+                                <span>${salary}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Overtime Pay</span>
+                                <span>KSh 35,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Performance Bonus</span>
+                                <span>KSh 20,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                <strong>Total Earnings</strong>
+                                <strong>${totalEarnings}</strong>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h5 style="margin-bottom: 10px; color: #2c3e50;">Deductions</h5>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Tax</span>
+                                <span>KSh 42,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Health Insurance</span>
+                                <span>KSh 18,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Retirement Plan</span>
+                                <span>KSh 20,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                <strong>Total Deductions</strong>
+                                <strong>KSh 80,000</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="font-size: 1.1rem;">Net Pay</strong>
+                            <strong style="font-size: 1.3rem; color: #27ae60;">${netPay}</strong>
+                        </div>
+                        <p style="margin-top: 5px; font-size: 0.9rem; color: #666;">Amount in words: ${getAmountInWords(netPay)}</p>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ddd; text-align: center; color: #666; font-size: 0.9rem;">
+                        <p>This is a computer-generated payslip. No signature required.</p>
+                        <p>For any discrepancies, please contact the HR department within 7 days.</p>
+                    </div>
+                </div>
+            `;
+            
+            payslipModal.style.display = 'flex';
+        }
+
+        function showOperationDetails(operationId) {
+            if (!operationDetailsContent) return;
+            
+            const operation = operationsData.find(op => op.id === operationId);
+            if (!operation) return;
+            
+            operationDetailsContent.innerHTML = `
+                <div style="border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h4 style="margin-bottom: 5px;">${operation.name}</h4>
+                            <p style="color: #666; margin-bottom: 5px;">Operation ID: ${operation.id}</p>
+                            <p style="color: #666">Department: ${operation.department}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin-bottom: 5px;"><strong>Status:</strong> <span class="status-badge status-${operation.status.toLowerCase().replace(' ', '-')}">${operation.status}</span></p>
+                            <p style="margin-bottom: 5px;"><strong>Priority:</strong> <span style="color: ${getPriorityColor(operation.priority)}">${operation.priority.charAt(0).toUpperCase() + operation.priority.slice(1)}</span></p>
+                            <p><strong>Due Date:</strong> ${formatDate(operation.dueDate)}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px; color: #2c3e50;">Description</h5>
+                        <p style="color: #666;">${operation.description}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px; color: #2c3e50;">Progress</h5>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${operation.progress}%; background-color: ${getProgressColor(operation.progress)}"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                            <small>Progress: ${operation.progress}%</small>
+                            <small>Days remaining: ${getDaysRemaining(operation.dueDate)}</small>
+                        </div>
+                    </div>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px;">
+                        <h5 style="margin-bottom: 10px; color: #2c3e50;">Operation Details</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <p style="margin-bottom: 5px;"><strong>Start Date:</strong> ${getStartDate(operation.dueDate)}</p>
+                                <p style="margin-bottom: 5px;"><strong>Assigned To:</strong> Team ${operation.department}</p>
+                            </div>
+                            <div>
+                                <p style="margin-bottom: 5px;"><strong>Budget:</strong> KSh ${getOperationBudget(operation.department)}</p>
+                                <p style="margin-bottom: 5px;"><strong>Last Updated:</strong> ${getLastUpdatedDate()}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            viewOperationModal.style.display = 'flex';
+        }
+
+        function showNotification(title, message, type = 'success') {
+            notification.className = `notification ${type}`;
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function hideNotification() {
+            notification.classList.remove('show');
+        }
+
+        function getProgressColor(progress) {
+            if (progress >= 80) return '#27ae60';
+            if (progress >= 50) return '#f39c12';
+            return '#e74c3c';
+        }
+
+        function getPriorityColor(priority) {
+            if (priority === 'high') return '#e74c3c';
+            if (priority === 'medium') return '#f39c12';
+            return '#27ae60';
+        }
+
+        function formatDate(dateString) {
+            if (dateString === 'Pending') return 'Pending';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function calculateTotalEarnings(salary) {
+            const salaryNum = parseInt(salary.replace('KSh ', '').replace(',', ''));
+            return `KSh ${(salaryNum + 35000 + 20000).toLocaleString()}`;
+        }
+
+        function calculateNetPay(salary) {
+            const salaryNum = parseInt(salary.replace('KSh ', '').replace(',', ''));
+            return `KSh ${(salaryNum + 35000 + 20000 - 80000).toLocaleString()}`;
+        }
+
+        function getAmountInWords(amount) {
+            const amountNum = parseInt(amount.replace('KSh ', '').replace(',', ''));
+            if (amountNum === 425000) return 'Four hundred twenty-five thousand Kenyan Shillings only';
+            if (amountNum === 355000) return 'Three hundred fifty-five thousand Kenyan Shillings only';
+            if (amountNum === 295000) return 'Two hundred ninety-five thousand Kenyan Shillings only';
+            if (amountNum === 375000) return 'Three hundred seventy-five thousand Kenyan Shillings only';
+            if (amountNum === 395000) return 'Three hundred ninety-five thousand Kenyan Shillings only';
+            if (amountNum === 455000) return 'Four hundred fifty-five thousand Kenyan Shillings only';
+            return `${amount} only`;
+        }
+
+        function getDaysRemaining(dueDate) {
+            const today = new Date();
+            const due = new Date(dueDate);
+            const diffTime = due - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays > 0 ? diffDays : 'Overdue';
+        }
+
+        function getStartDate(dueDate) {
+            const due = new Date(dueDate);
+            const start = new Date(due);
+            start.setDate(start.getDate() - 30);
+            return formatDate(start.toISOString().split('T')[0]);
+        }
+
+        function getOperationBudget(department) {
+            const budgets = {
+                'Sales': '500,000',
+                'Marketing': '750,000',
+                'Production': '1,200,000',
+                'HR': '300,000',
+                'Finance': '400,000',
+                'IT': '600,000'
+            };
+            return budgets[department] || '250,000';
+        }
+
+        function getLastUpdatedDate() {
+            const date = new Date();
+            date.setDate(date.getDate() - Math.floor(Math.random() * 5));
+            return formatDate(date.toISOString().split('T')[0]);
+        }
+
+        function exportReportAsPDF() {
+            if (!window.jspdf) {
+                showNotification('Error', 'PDF library not loaded', 'error');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            const dashboardSection = document.getElementById('dashboard-section');
+            
+            exportReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+            exportReportBtn.disabled = true;
+            
+            html2canvas(dashboardSection).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 500;
+                const pageHeight = 800;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 40;
+                
+                doc.addImage(imgData, 'PNG', 40, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 40, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                doc.setFontSize(20);
+                doc.text('Pro Gym Managers\' Dashboard Report', 40, 30);
+                doc.setFontSize(12);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 50);
+                
+                doc.save(`Pro-Gym-Managers-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                exportReportBtn.innerHTML = '<i class="fas fa-download"></i> Export Report';
+                exportReportBtn.disabled = false;
+                showNotification('Success', 'Report exported successfully as PDF!', 'success');
+            }).catch(() => {
+                exportReportBtn.innerHTML = '<i class="fas fa-download"></i> Export Report';
+                exportReportBtn.disabled = false;
+                showNotification('Error', 'Error generating PDF. Please try again.', 'error');
+            });
+        }
+
+        function exportStatementsAsPDF() {
+            if (!window.jspdf) {
+                showNotification('Error', 'PDF library not loaded', 'error');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            const accountsSection = document.getElementById('accounts-section');
+            
+            exportStatementsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+            exportStatementsBtn.disabled = true;
+            
+            html2canvas(accountsSection).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 500;
+                const pageHeight = 800;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 40;
+                
+                doc.addImage(imgData, 'PNG', 40, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 40, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                doc.setFontSize(20);
+                doc.text('Pro Gym Accounts Statements', 40, 30);
+                doc.setFontSize(12);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 50);
+                doc.text('Company: Pro Gym Ltd', 40, 70);
+                doc.text('Period: October 2023', 40, 90);
+                
+                doc.save(`Pro-Gym-Accounts-${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                exportStatementsBtn.innerHTML = '<i class="fas fa-file-export"></i> Export Statements';
+                exportStatementsBtn.disabled = false;
+                showNotification('Success', 'Accounts statements exported successfully as PDF!', 'success');
+            }).catch(() => {
+                exportStatementsBtn.innerHTML = '<i class="fas fa-file-export"></i> Export Statements';
+                exportStatementsBtn.disabled = false;
+                showNotification('Error', 'Error generating PDF. Please try again.', 'error');
+            });
+        }
+
+        function generateStatementAsPDF() {
+            if (!window.jspdf) {
+                showNotification('Error', 'PDF library not loaded', 'error');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            const reportsSection = document.getElementById('reports-section');
+            
+            generateStatementBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            generateStatementBtn.disabled = true;
+            
+            html2canvas(reportsSection).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 500;
+                const pageHeight = 800;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 40;
+                
+                doc.addImage(imgData, 'PNG', 40, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 40, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                doc.setFontSize(20);
+                doc.text('Pro Gym Business Statement', 40, 30);
+                doc.setFontSize(12);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 50);
+                doc.text('Company: Pro Gym Ltd', 40, 70);
+                doc.text('Period: October 2023', 40, 90);
+                
+                doc.save(`Pro-Gym-Statement-${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                generateStatementBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate Statement';
+                generateStatementBtn.disabled = false;
+                showNotification('Success', 'Business statement generated successfully as PDF!', 'success');
+            }).catch(() => {
+                generateStatementBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate Statement';
+                generateStatementBtn.disabled = false;
+                showNotification('Error', 'Error generating PDF. Please try again.', 'error');
+            });
+        }
+
+        function emailReport() {
+            const subject = encodeURIComponent('Pro Gym Business Report - October 2023');
+            const body = encodeURIComponent(`Dear Team,\n\nPlease find attached the Pro Gym business report for October 2023.\n\nKey Highlights:\n- Revenue: KSh 12,458,000\n- Active Employees: 48/52\n- Salaries Paid: 85%\n\nBest regards,\nJohn Manager\nGym Operations Manager`);
+            
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
+            showNotification('Info', 'Opening Gmail to send the report...', 'warning');
+        }
+
+        function addNewTransaction(formData) {
+            const lastTransaction = cashflowData[cashflowData.length - 1];
+            const lastBalance = parseInt(lastTransaction.balance.replace('KSh ', '').replace(',', ''));
+            
+            let newIncome = '-';
+            let newExpense = '-';
+            let newBalance = lastBalance;
+            
+            if (formData.category === 'Income') {
+                newIncome = `KSh ${parseInt(formData.amount).toLocaleString()}`;
+                newBalance += parseInt(formData.amount);
+            } else {
+                newExpense = `KSh ${parseInt(formData.amount).toLocaleString()}`;
+                newBalance -= parseInt(formData.amount);
+            }
+            
+            const newTransaction = {
+                date: formData.date,
+                description: formData.description,
+                category: formData.category,
+                income: newIncome,
+                expense: newExpense,
+                balance: `KSh ${newBalance.toLocaleString()}`
+            };
+            
+            cashflowData.push(newTransaction);
+            saveToDB('cashflow', newTransaction);
+            populateCashflowTable();
+            showNotification('Success', `Transaction "${formData.description}" added successfully!`, 'success');
+        }
+
+        function addNewOperation(formData) {
+            const newId = `OP-${String(operationsData.length + 1).padStart(3, '0')}`;
+            const newOperation = {
+                id: newId,
+                name: formData.name,
+                department: formData.department,
+                status: "In Progress",
+                progress: 0,
+                dueDate: formData.dueDate,
+                description: formData.description,
+                priority: formData.priority
+            };
+            
+            operationsData.push(newOperation);
+            saveToDB('operations', newOperation);
+            populateOperationsTable();
+            showNotification('Success', `Operation "${formData.name}" added successfully!`, 'success');
+        }
+
+        function updateLiveStats() {
+            const revenueValue = document.getElementById('revenue-value');
+            const currentRevenue = parseInt(revenueValue.textContent.replace('KSh ', '').replace(',', ''));
+            const change = Math.floor(Math.random() * 100000) - 50000;
+            const newRevenue = Math.max(1000000, currentRevenue + change);
+            revenueValue.textContent = 'KSh ' + new Intl.NumberFormat().format(newRevenue);
+            
+            const salariesValue = document.getElementById('salaries-value');
+            const paidCount = payslipsData.filter(emp => emp.status === 'Paid').length;
+            const totalCount = payslipsData.length;
+            const percentage = Math.round((paidCount / totalCount) * 100);
+            salariesValue.textContent = percentage + '%';
+        }
+
+        function setupEventListeners() {
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const sectionId = this.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+            
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const modalId = this.getAttribute('data-modal');
+                    if (modalId) {
+                        document.getElementById(modalId).style.display = 'none';
+                    }
+                });
+            });
+            
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal-overlay')) {
+                    e.target.style.display = 'none';
+                }
+            });
+            
+            if (runPayrollBtn) {
+                runPayrollBtn.addEventListener('click', function() {
+                    const payrollBtn = this;
+                    const originalText = payrollBtn.innerHTML;
+                    
+                    payrollBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    payrollBtn.disabled = true;
+                    
+                    setTimeout(() => {
+                        payslipsData.forEach(employee => {
+                            if (employee.status === 'Unpaid') {
+                                employee.status = 'Paid';
+                                employee.date = new Date().toISOString().split('T')[0];
+                                saveToDB('payslips', employee);
+                            }
+                        });
+                        
+                        populatePayslipsTable();
+                        payrollBtn.innerHTML = originalText;
+                        payrollBtn.disabled = false;
+                        showNotification('Success', 'Payroll processed successfully! All pending salaries have been paid.', 'success');
+                    }, 2000);
+                });
+            }
+            
+            if (exportReportBtn) exportReportBtn.addEventListener('click', exportReportAsPDF);
+            if (exportStatementsBtn) exportStatementsBtn.addEventListener('click', exportStatementsAsPDF);
+            if (generateStatementBtn) generateStatementBtn.addEventListener('click', generateStatementAsPDF);
+            if (emailReportBtn) emailReportBtn.addEventListener('click', emailReport);
+            
+            if (addOperationBtn) {
+                addOperationBtn.addEventListener('click', function() {
+                    addOperationModal.style.display = 'flex';
+                });
+            }
+            
+            if (addTransactionBtn) {
+                addTransactionBtn.addEventListener('click', function() {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('transaction-date').value = today;
+                    addTransactionModal.style.display = 'flex';
+                });
+            }
+            
+            if (addOperationForm) {
+                addOperationForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('operation-name').value,
+                        department: document.getElementById('operation-department').value,
+                        description: document.getElementById('operation-description').value,
+                        dueDate: document.getElementById('operation-due-date').value,
+                        priority: document.getElementById('operation-priority').value
+                    };
+                    
+                    addNewOperation(formData);
+                    addOperationModal.style.display = 'none';
+                    addOperationForm.reset();
+                });
+            }
+            
+            if (addTransactionForm) {
+                addTransactionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        date: document.getElementById('transaction-date').value,
+                        description: document.getElementById('transaction-description').value,
+                        category: document.getElementById('transaction-category').value,
+                        amount: document.getElementById('transaction-amount').value
+                    };
+                    
+                    addNewTransaction(formData);
+                    addTransactionModal.style.display = 'none';
+                    addTransactionForm.reset();
+                });
+            }
+            
+            periodDropdown.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const period = this.getAttribute('data-period');
+                    const dropdownBtn = document.querySelector('.dropdown .btn-outline');
+                    
+                    let periodText = 'This Month';
+                    switch(period) {
+                        case 'this-quarter': periodText = 'This Quarter'; break;
+                        case 'this-year': periodText = 'This Year'; break;
+                        case 'last-month': periodText = 'Last Month'; break;
+                    }
+                    
+                    dropdownBtn.innerHTML = `<i class="fas fa-calendar-alt"></i> ${periodText} <i class="fas fa-caret-down"></i>`;
+                    showNotification('Info', `Dashboard filtered to show data for: ${periodText}`, 'warning');
+                });
+            });
+            
+            document.querySelectorAll('.btn-outline[data-modal]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const modalId = this.getAttribute('data-modal');
+                    document.getElementById(modalId).style.display = 'none';
+                });
+            });
+        }
+
+        window.hideNotification = hideNotification;
+    </script>
+    <script src="generate-config.js.js"></script>
+</body>
+</html>
